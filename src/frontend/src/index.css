@@ -1,0 +1,134 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "PlusJakartaSans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    /* Navy #0B2F4A => oklch ~0.26 0.07 240 */
+    --background: 0.98 0.003 240;
+    --foreground: 0.145 0 0;
+    --card: 1 0 0;
+    --card-foreground: 0.145 0 0;
+    --popover: 1 0 0;
+    --popover-foreground: 0.145 0 0;
+    /* Primary = navy #0B2F4A */
+    --primary: 0.26 0.07 240;
+    --primary-foreground: 0.98 0 0;
+    /* Secondary = blue #1F6FB2 */
+    --secondary: 0.5 0.13 245;
+    --secondary-foreground: 0.98 0 0;
+    --muted: 0.95 0.005 240;
+    --muted-foreground: 0.5 0.01 240;
+    --accent: 0.5 0.13 245;
+    --accent-foreground: 0.98 0 0;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.88 0.01 240;
+    --input: 0.88 0.01 240;
+    --ring: 0.5 0.13 245;
+    --chart-1: 0.5 0.13 245;
+    --chart-2: 0.6 0.118 184.704;
+    --chart-3: 0.398 0.07 227.392;
+    --chart-4: 0.828 0.189 84.429;
+    --chart-5: 0.769 0.188 70.08;
+    --sidebar: 0.26 0.07 240;
+    --sidebar-foreground: 0.98 0 0;
+    --sidebar-primary: 0.5 0.13 245;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.32 0.07 240;
+    --sidebar-accent-foreground: 0.98 0 0;
+    --sidebar-border: 0.35 0.06 240;
+    --sidebar-ring: 0.5 0.13 245;
+    /* Custom navy tokens */
+    --navy: 0.26 0.07 240;
+    --navy-dark: 0.2 0.07 240;
+    --blue-accent: 0.5 0.13 245;
+    --blue-light: 0.6 0.13 245;
+    --success: 0.6 0.16 145;
+    --warning: 0.75 0.15 75;
+    --error: 0.577 0.245 27;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Poppins", "PlusJakartaSans", sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Poppins", "PlusJakartaSans", sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer utilities {
+  .text-navy {
+    color: oklch(var(--navy));
+  }
+  .bg-navy {
+    background-color: oklch(var(--navy));
+  }
+  .bg-navy-dark {
+    background-color: oklch(var(--navy-dark));
+  }
+  .text-blue-accent {
+    color: oklch(var(--blue-accent));
+  }
+  .bg-blue-accent {
+    background-color: oklch(var(--blue-accent));
+  }
+  .bg-gradient-blue {
+    background: linear-gradient(
+      135deg,
+      oklch(var(--blue-accent)),
+      oklch(var(--navy))
+    );
+  }
+  .bg-light-gray {
+    background-color: oklch(0.97 0.005 240);
+  }
+  .text-success {
+    color: oklch(var(--success));
+  }
+  .bg-success {
+    background-color: oklch(var(--success));
+  }
+  .text-error {
+    color: oklch(var(--error));
+  }
+  .bg-error {
+    background-color: oklch(var(--error));
+  }
+  .passage-correct {
+    color: oklch(var(--success));
+  }
+  .passage-current {
+    text-decoration: underline;
+    color: oklch(var(--blue-accent));
+    font-weight: 600;
+  }
+  .passage-error {
+    background-color: oklch(var(--error) / 0.2);
+    color: oklch(var(--error));
+  }
+  .passage-upcoming {
+    color: oklch(0.4 0 0);
+  }
+}
