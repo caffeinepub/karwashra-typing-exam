@@ -8,9 +8,13 @@ import { ExamRules } from "@/pages/ExamRules";
 import { ForgotPassword } from "@/pages/ForgotPassword";
 import { Home } from "@/pages/Home";
 import { LearnTyping } from "@/pages/LearnTyping";
+import { LearningPage } from "@/pages/LearningPage";
 import { LiveHub } from "@/pages/LiveHub";
+import { LiveTestPage } from "@/pages/LiveTestPage";
 import { LiveTestRoom } from "@/pages/LiveTestRoom";
 import { Login } from "@/pages/Login";
+import { MockTestPage } from "@/pages/MockTestPage";
+import { PracticePage } from "@/pages/PracticePage";
 import { Results } from "@/pages/Results";
 import { Signup } from "@/pages/Signup";
 import { TypingTest } from "@/pages/TypingTest";
@@ -28,7 +32,12 @@ const queryClient = new QueryClient();
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isHome = pathname === "/";
+  const isHome =
+    pathname === "/" ||
+    pathname === "/live-test" ||
+    pathname === "/practice" ||
+    pathname === "/learning" ||
+    pathname === "/mock-test";
 
   if (isHome) {
     return (
@@ -129,6 +138,27 @@ const liveRoomRoute = createRoute({
   component: LiveTestRoom,
 });
 
+const liveTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/live-test",
+  component: LiveTestPage,
+});
+const practiceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/practice",
+  component: PracticePage,
+});
+const learningRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learning",
+  component: LearningPage,
+});
+const mockTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/mock-test",
+  component: MockTestPage,
+});
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   learnRoute,
@@ -143,6 +173,10 @@ const routeTree = rootRoute.addChildren([
   dashboardRoute,
   liveHubRoute,
   liveRoomRoute,
+  liveTestRoute,
+  practiceRoute,
+  learningRoute,
+  mockTestRoute,
 ]);
 
 const router = createRouter({ routeTree });

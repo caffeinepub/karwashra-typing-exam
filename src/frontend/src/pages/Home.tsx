@@ -1,503 +1,1066 @@
-import type { LiveSessionPublic } from "@/backend";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EXAMS } from "@/data/exams";
-import { useActor } from "@/hooks/useActor";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  BookOpen,
-  Building2,
-  Gavel,
-  GraduationCap,
-  Landmark,
-  MoreHorizontal,
-  Train,
-} from "lucide-react";
 import { useState } from "react";
 
-const EXAM_CATEGORIES = [
+const SOCIAL = [
   {
-    id: "ssc",
-    label: "SSC CGL/CHSL",
-    icon: GraduationCap,
-    color: "text-red-600",
-  },
-  { id: "rrb", label: "RRB NTPC", icon: Train, color: "text-red-600" },
-  {
-    id: "state",
-    label: "STATE GOVT",
-    icon: Landmark,
-    color: "text-orange-600",
-  },
-  { id: "court", label: "COURT EXAMS", icon: Gavel, color: "text-blue-700" },
-  { id: "banking", label: "BANKING", icon: Building2, color: "text-green-700" },
-  {
-    id: "other",
-    label: "OTHER EXAMS",
-    icon: MoreHorizontal,
-    color: "text-gray-600",
-  },
-];
-
-const SESSION_OPTIONS = [
-  { value: "en-10", label: "English 10-minute session" },
-  { value: "hi-10", label: "Hindi 10-minute session" },
-  { value: "en-5", label: "English 5-minute session" },
-  { value: "hi-5", label: "Hindi 5-minute session" },
-];
-
-const SAMPLE_TEXT_EN =
-  "The Staff Selection Commission conducts the Combined Higher Secondary Level examination every year for recruitment to various posts in Government of India. Candidates from Chandigarh, Rohtak, Hisar, Karnal and other cities of Haryana participate in large numbers. The examination tests typing speed and accuracy on computer. Practice daily to improve your words per minute and achieve success in the examination.";
-
-const SAMPLE_TEXT_HI =
-  "भारत सरकार के विभिन्न विभागों में भर्ती के लिए कर्मचारी चयन आयोग प्रतिवर्ष परीक्षाएं आयोजित करता है। चंडीगढ़, रोहतक, हिसार, करनाल और गुरुग्राम के अभ्यर्थी बड़ी संख्या में परीक्षा में भाग लेते हैं। कंप्यूटर पर टाइपिंग गति और सटीकता का परीक्षण किया जाता है।";
-
-const MOCK_SESSIONS: LiveSessionPublic[] = [
-  {
-    roomId: "mock-1",
-    examId: "ssc-chsl",
-    examName: "SSC CGL Mock",
-    timeLimit: BigInt(10),
-    startTime: BigInt(Date.now()) * BigInt(1_000_000),
-    isActive: false,
-    participants: [],
+    name: "YouTube",
+    url: "https://youtube.com/@supernatic?si=046swXr_71YSf-Dg",
+    icon: "▶",
+    color: "#ff0000",
+    bg: "#ff0000",
   },
   {
-    roomId: "mock-2",
-    examId: "rrb-ntpc",
-    examName: "RRB NTPC Mock",
-    timeLimit: BigInt(10),
-    startTime: BigInt(Date.now()) * BigInt(1_000_000),
-    isActive: true,
-    participants: [],
+    name: "Instagram",
+    url: "https://www.instagram.com/manish_karwashra?igsh=MXU5ODVoY2UydmRnYQ==",
+    icon: "📷",
+    color: "#e1306c",
+    bg: "linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+  },
+  {
+    name: "Twitter",
+    url: "https://x.com/sukhdev_2005",
+    icon: "𝕏",
+    color: "#1da1f2",
+    bg: "#1da1f2",
+  },
+  {
+    name: "Threads",
+    url: "https://www.threads.com/@manish_karwashra",
+    icon: "@",
+    color: "#fff",
+    bg: "#000",
   },
 ];
 
-type TabId =
-  | "select-exam"
-  | "start-test"
-  | "pause"
-  | "show-results"
-  | "history"
-  | "settings";
+const ROW1 = [
+  {
+    label: "All Govt Exam",
+    abbr: "GOV",
+    path: "/exams",
+    color: "#1a3a8c",
+    domain: "india.gov.in",
+  },
+  {
+    label: "State Exam",
+    abbr: "HSS",
+    path: "/exam/hssc/test",
+    color: "#2e7d32",
+    domain: "hssc.gov.in",
+  },
+  {
+    label: "Harton Exam",
+    abbr: "HRT",
+    path: "/exam/haryana-harton/test",
+    color: "#e65100",
+    domain: "hartron.org",
+  },
+  {
+    label: "Court",
+    abbr: "CRT",
+    path: "/exam/high-court-delhi/test",
+    color: "#6a1b9a",
+    domain: "delhihighcourt.nic.in",
+  },
+  {
+    label: "Banking",
+    abbr: "BANK",
+    path: "/exam/bank-po/test",
+    color: "#0277bd",
+    domain: "ibps.in",
+  },
+  {
+    label: "DCSCB",
+    abbr: "DSSB",
+    path: "/exam/dsssb/test",
+    color: "#37474f",
+    domain: "dsssb.delhi.gov.in",
+  },
+  {
+    label: "HSSC",
+    abbr: "HSSC",
+    path: "/exam/hssc/test",
+    color: "#1565c0",
+    domain: "hssc.gov.in",
+  },
+  {
+    label: "Clerk",
+    abbr: "CHSL",
+    path: "/exam/ssc-chsl/test",
+    color: "#ad1457",
+    domain: "ssc.nic.in",
+  },
+  {
+    label: "NVS",
+    abbr: "NVS",
+    path: "/exam/nvs/test",
+    color: "#2e7d32",
+    domain: "navodaya.gov.in",
+  },
+  {
+    label: "UP Police",
+    abbr: "UPP",
+    path: "/exam/up-police/test",
+    color: "#1a237e",
+    domain: "uppbpb.gov.in",
+  },
+  {
+    label: "Delhi Police",
+    abbr: "DLP",
+    path: "/exam/delhi-police/test",
+    color: "#b71c1c",
+    domain: "delhipolice.nic.in",
+  },
+  {
+    label: "SBI PO",
+    abbr: "SBI",
+    path: "/exam/sbi-po/test",
+    color: "#1565c0",
+    domain: "sbi.co.in",
+  },
+];
+
+const ROW2 = [
+  {
+    label: "USC",
+    abbr: "USC",
+    path: "/exam/usc/test",
+    color: "#4a148c",
+    domain: "upsc.gov.in",
+  },
+  {
+    label: "DSSSB",
+    abbr: "DSSB",
+    path: "/exam/dsssb/test",
+    color: "#1a3a8c",
+    domain: "dsssb.delhi.gov.in",
+  },
+  {
+    label: "SSC",
+    abbr: "SSC",
+    path: "/exam/ssc-cgl/test",
+    color: "#e65100",
+    domain: "ssc.nic.in",
+  },
+  {
+    label: "KNK",
+    abbr: "KNK",
+    path: "/exam/knk/test",
+    color: "#2e7d32",
+    domain: "india.gov.in",
+  },
+  {
+    label: "EDV",
+    abbr: "EDV",
+    path: "/exam/edv/test",
+    color: "#0277bd",
+    domain: "education.gov.in",
+  },
+  {
+    label: "NABARD",
+    abbr: "NAB",
+    path: "/exam/nabard/test",
+    color: "#558b2f",
+    domain: "nabard.org",
+  },
+  {
+    label: "KVS",
+    abbr: "KVS",
+    path: "/exam/kvs/test",
+    color: "#37474f",
+    domain: "kvsangathan.nic.in",
+  },
+  {
+    label: "CTET",
+    abbr: "CTET",
+    path: "/exam/ctet/test",
+    color: "#ad1457",
+    domain: "ctet.nic.in",
+  },
+  {
+    label: "IBPS Clerk",
+    abbr: "IBPS",
+    path: "/exam/ibps-clerk/test",
+    color: "#1565c0",
+    domain: "ibps.in",
+  },
+  {
+    label: "LIC ADO",
+    abbr: "LIC",
+    path: "/exam/lic-ado/test",
+    color: "#b71c1c",
+    domain: "licindia.in",
+  },
+  {
+    label: "PSU Exams",
+    abbr: "PSU",
+    path: "/exam/psu-exams/test",
+    color: "#4e342e",
+    domain: "india.gov.in",
+  },
+  {
+    label: "State PCS",
+    abbr: "PCS",
+    path: "/exam/state-pcs/test",
+    color: "#006064",
+    domain: "india.gov.in",
+  },
+];
+
+const GAMING_LEFT = [
+  {
+    id: "esports-officials",
+    label: "eSports Officials",
+    sub: "Gaming Federation",
+    color: "linear-gradient(135deg,#1565c0,#0d47a1)",
+    icon: "🎮",
+  },
+  {
+    id: "competitive-gaming-league",
+    label: "Competitive Gaming League",
+    sub: "CGL Gaming Board",
+    color: "linear-gradient(135deg,#1a3a8c,#283593)",
+    icon: "🏆",
+  },
+];
+
+const GAMING_RIGHT = [
+  {
+    id: "gaming-ethics-law",
+    label: "Gaming Ethics & Law",
+    sub: "Regulatory Board",
+    color: "linear-gradient(135deg,#37474f,#263238)",
+    icon: "⚖️",
+  },
+  {
+    id: "gaming-strategy",
+    label: "Gaming Strategy",
+    sub: "Strategy Board",
+    color: "linear-gradient(135deg,#4a148c,#311b92)",
+    icon: "♟️",
+  },
+];
+
+function ExamTile({
+  label,
+  abbr,
+  color,
+  domain,
+  onClick,
+}: {
+  label: string;
+  abbr: string;
+  color: string;
+  domain: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-ocid={`home.${abbr.toLowerCase()}.button`}
+      style={{
+        background: "#fff",
+        border: "1px solid #dde3ef",
+        borderRadius: 6,
+        padding: "8px 4px",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 5,
+        transition: "box-shadow 0.15s, transform 0.1s",
+        minWidth: 0,
+      }}
+      onMouseEnter={(e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        b.style.boxShadow = "0 4px 12px rgba(26,58,140,0.18)";
+        b.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        b.style.boxShadow = "none";
+        b.style.transform = "none";
+      }}
+    >
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 8,
+          background: color,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        }}
+      >
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+          alt={label}
+          style={{ width: 22, height: 22 }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+            (e.target as HTMLImageElement)
+              .parentElement!.querySelector(".abbr-fallback")!
+              .setAttribute("style", "display:block");
+          }}
+        />
+        <span
+          className="abbr-fallback"
+          style={{
+            display: "none",
+            color: "#fff",
+            fontSize: 9,
+            fontWeight: 800,
+          }}
+        >
+          {abbr}
+        </span>
+      </div>
+      <span
+        style={{
+          fontSize: 10,
+          color: "#1a2a6c",
+          fontWeight: 600,
+          textAlign: "center",
+          lineHeight: 1.2,
+          padding: "0 2px",
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+function GamingCard({
+  item,
+  onClick,
+}: { item: (typeof GAMING_LEFT)[0]; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-ocid={`home.gaming.${item.id}.button`}
+      style={{
+        background: item.color,
+        border: "none",
+        borderRadius: 10,
+        padding: "14px 10px",
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 6,
+        color: "#fff",
+        flex: 1,
+        transition: "filter 0.15s, transform 0.1s",
+        minHeight: 90,
+        justifyContent: "center",
+      }}
+      onMouseEnter={(e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        b.style.filter = "brightness(1.15)";
+        b.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        b.style.filter = "none";
+        b.style.transform = "none";
+      }}
+    >
+      <span style={{ fontSize: 24 }}>{item.icon}</span>
+      <span
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          textAlign: "center",
+          lineHeight: 1.3,
+        }}
+      >
+        {item.label}
+      </span>
+      <span style={{ fontSize: 9, opacity: 0.8, textAlign: "center" }}>
+        {item.sub}
+      </span>
+    </button>
+  );
+}
 
 export function Home() {
   const navigate = useNavigate();
-  const { actor, isFetching } = useActor();
-  const [activeTab, setActiveTab] = useState<TabId>("select-exam");
-  const [selectedCategory, setSelectedCategory] = useState("ssc");
-  const [session, setSession] = useState("en-10");
-
-  const sessionsQuery = useQuery<LiveSessionPublic[]>({
-    queryKey: ["activeSessions-home"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getActiveLiveSessions();
-    },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 10000,
-  });
-
-  const liveSessions = sessionsQuery.data ?? MOCK_SESSIONS;
-  const upcomingSessions = liveSessions.filter((s) => !s.isActive);
-  const activeSessions = liveSessions.filter((s) => s.isActive);
-
-  const handleTabClick = (tab: TabId) => {
-    setActiveTab(tab);
-    if (tab === "start-test") navigate({ to: "/exams" });
-    else if (tab === "show-results" || tab === "history")
-      navigate({ to: "/dashboard" });
-  };
-
-  const handleStartPractice = () => {
-    const isHindi = session.startsWith("hi");
-    const firstExam = EXAMS.find((e) =>
-      isHindi ? e.language === "Hindi" : e.language === "English",
-    );
-    if (firstExam)
-      navigate({ to: "/exam/$id/test", params: { id: firstExam.id } });
-    else navigate({ to: "/exams" });
-  };
-
-  const sampleText = session.startsWith("hi") ? SAMPLE_TEXT_HI : SAMPLE_TEXT_EN;
-
-  const getExamName = (examId: string) => {
-    const exam = EXAMS.find((e) => e.id === examId);
-    return exam?.name ?? examId.toUpperCase();
-  };
-
-  const formatTime = (createdAt: bigint) => {
-    try {
-      const ms = Number(createdAt) / 1_000_000;
-      return new Date(ms).toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "09:00 PM";
-    }
-  };
-
-  const TABS: { id: TabId; label: string }[] = [
-    { id: "select-exam", label: "SELECT EXAM" },
-    { id: "start-test", label: "START TEST" },
-    { id: "pause", label: "PAUSE" },
-    { id: "show-results", label: "SHOW RESULTS" },
-    { id: "history", label: "HISTORY" },
-    { id: "settings", label: "SETTINGS" },
-  ];
+  const { isLoggedIn, username, logout } = useAuth();
+  const [activeLang, setActiveLang] = useState("all");
 
   return (
     <div
-      className="h-screen flex flex-col"
-      style={{ fontFamily: "Arial, sans-serif" }}
+      style={{
+        minHeight: "100vh",
+        background: "#eef2f8",
+        fontFamily: "Arial, sans-serif",
+      }}
     >
-      {/* Blue Header Bar */}
-      <div
-        data-ocid="home.section"
-        className="flex items-center justify-between px-4 py-2 flex-shrink-0"
-        style={{ backgroundColor: "#1565C0" }}
+      {/* HEADER */}
+      <header
+        style={{
+          background: "linear-gradient(135deg, #1a3a8c 0%, #0d2060 100%)",
+          padding: "10px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+        }}
       >
-        <span className="text-white font-bold text-lg tracking-wide">
-          KARWASHRA TYPING GOVT EXAM
-        </span>
-        <span className="text-white font-bold text-base">HOME PAGE</span>
-      </div>
-
-      {/* Tab Navigation */}
-      <div
-        className="flex flex-shrink-0"
-        style={{ backgroundColor: "#0D1B3E" }}
-      >
-        {TABS.map((tab) => (
-          <button
-            type="button"
-            key={tab.id}
-            data-ocid={`home.${tab.id.replace("-", "_")}.tab`}
-            onClick={() => handleTabClick(tab.id)}
-            className="px-5 py-2 text-xs font-bold text-white uppercase tracking-wider border-r border-gray-600 hover:bg-blue-700 transition-colors"
+        <div
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #ff6b00, #ff9500)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          }}
+        >
+          <span style={{ fontSize: 20 }}>⌨️</span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div
             style={{
-              backgroundColor: activeTab === tab.id ? "#1565C0" : "transparent",
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 17,
+              letterSpacing: 0.5,
+              lineHeight: 1.2,
             }}
           >
-            {tab.label}
+            Manish Karwashra Typing
+          </div>
+          <div style={{ color: "#a8c4ff", fontSize: 10.5 }}>
+            Govt Exam Typing Platform
+          </div>
+        </div>
+        <nav style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button
+            type="button"
+            data-ocid="nav.practice.link"
+            onClick={() => navigate({ to: "/practice" })}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#c8d8ff",
+              fontSize: 12,
+              cursor: "pointer",
+              padding: "4px 8px",
+            }}
+          >
+            Practice
+          </button>
+          <button
+            type="button"
+            data-ocid="nav.learning.link"
+            onClick={() => navigate({ to: "/learning" })}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#c8d8ff",
+              fontSize: 12,
+              cursor: "pointer",
+              padding: "4px 8px",
+            }}
+          >
+            Learning
+          </button>
+          <button
+            type="button"
+            data-ocid="nav.live.link"
+            onClick={() => navigate({ to: "/live-test" })}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#c8d8ff",
+              fontSize: 12,
+              cursor: "pointer",
+              padding: "4px 8px",
+            }}
+          >
+            Live
+          </button>
+          {isLoggedIn ? (
+            <>
+              <button
+                type="button"
+                data-ocid="nav.dashboard.link"
+                onClick={() => navigate({ to: "/dashboard" })}
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  color: "#fff",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  padding: "5px 12px",
+                  borderRadius: 5,
+                }}
+              >
+                {username}
+              </button>
+              <button
+                type="button"
+                data-ocid="nav.logout.button"
+                onClick={logout}
+                style={{
+                  background: "#e65100",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  padding: "5px 12px",
+                  borderRadius: 5,
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                data-ocid="nav.login.button"
+                onClick={() => navigate({ to: "/login" })}
+                style={{
+                  background: "none",
+                  border: "1.5px solid rgba(255,255,255,0.6)",
+                  color: "#fff",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  padding: "5px 14px",
+                  borderRadius: 5,
+                }}
+              >
+                Login
+              </button>
+              <button
+                type="button"
+                data-ocid="nav.register.button"
+                onClick={() => navigate({ to: "/signup" })}
+                style={{
+                  background: "linear-gradient(135deg,#ff6b00,#ff9500)",
+                  border: "none",
+                  color: "#fff",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  padding: "5px 14px",
+                  borderRadius: 5,
+                  boxShadow: "0 2px 6px rgba(255,107,0,0.5)",
+                }}
+              >
+                Register
+              </button>
+            </>
+          )}
+        </nav>
+      </header>
+
+      {/* LANGUAGE BAR */}
+      <div
+        style={{
+          background: "#fff",
+          borderBottom: "1px solid #d8e0ef",
+          padding: "8px",
+          textAlign: "center",
+          display: "flex",
+          justifyContent: "center",
+          gap: 4,
+          alignItems: "center",
+        }}
+      >
+        <span style={{ fontSize: 16 }}>🇮🇳</span>
+        {["hindi", "english", "all"].map((lang) => (
+          <button
+            key={lang}
+            type="button"
+            data-ocid={`home.lang.${lang}.toggle`}
+            onClick={() => setActiveLang(lang)}
+            style={{
+              background: activeLang === lang ? "#1a3a8c" : "none",
+              color: activeLang === lang ? "#fff" : "#1a3a8c",
+              border: "1px solid #1a3a8c",
+              borderRadius: 4,
+              padding: "3px 12px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            {lang === "hindi"
+              ? "हिन्दी"
+              : lang === "english"
+                ? "English"
+                : "All Language"}
           </button>
         ))}
       </div>
 
-      {/* 3-Column Content Area */}
-      <div
-        className="flex flex-1 overflow-hidden"
-        style={{ backgroundColor: "#f0f0f0" }}
+      {/* HERO SECTION */}
+      <section
+        style={{
+          background: "linear-gradient(180deg, #e8eeff 0%, #f0f4f8 100%)",
+          padding: "20px 16px 12px",
+        }}
       >
-        {/* Left: Exam Categories */}
-        <div
-          className="flex flex-col overflow-hidden border-r border-gray-300"
-          style={{ width: "33%", backgroundColor: "#ffffff" }}
-        >
-          <div
-            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
-            style={{ backgroundColor: "#e8e8e8" }}
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <h1
+            style={{
+              textAlign: "center",
+              color: "#ff6b00",
+              fontStyle: "italic",
+              fontWeight: 900,
+              fontSize: 26,
+              margin: "0 0 4px",
+              textShadow: "1px 2px 6px rgba(255,107,0,0.2)",
+            }}
           >
-            <span className="font-bold text-sm text-gray-800 uppercase tracking-wide">
-              EXAM CATEGORIES
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 p-3 overflow-y-auto">
-            {EXAM_CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
-              return (
+            Welcome to Karwashra Typing
+          </h1>
+          <p
+            style={{
+              textAlign: "center",
+              color: "#3a4a6a",
+              fontSize: 13,
+              margin: "0 0 16px",
+              fontWeight: 500,
+            }}
+          >
+            Speed up your typing &amp; Crack all Govt. &amp; State Exams!
+          </p>
+
+          {/* Hero 3-column: gaming left, center, gaming right */}
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "stretch",
+              justifyContent: "center",
+            }}
+          >
+            {/* Gaming Left */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                width: 130,
+                flexShrink: 0,
+              }}
+            >
+              {GAMING_LEFT.map((item) => (
+                <GamingCard
+                  key={item.id}
+                  item={item}
+                  onClick={() => navigate({ to: `/exam/${item.id}/test` })}
+                />
+              ))}
+            </div>
+
+            {/* Center */}
+            <div
+              style={{
+                flex: 1,
+                maxWidth: 560,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <img
+                src="/assets/generated/hero-typing-exam.dim_1600x900.jpg"
+                alt="Typing Exam"
+                style={{
+                  width: "100%",
+                  maxWidth: 420,
+                  height: 160,
+                  objectFit: "cover",
+                  borderRadius: 12,
+                  boxShadow: "0 4px 16px rgba(26,58,140,0.2)",
+                }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.background =
+                    "linear-gradient(135deg,#1a3a8c,#0d2060)";
+                  (e.target as HTMLImageElement).src = "";
+                }}
+              />
+              {/* 4 Action Buttons */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 8,
+                  width: "100%",
+                }}
+              >
                 <button
                   type="button"
-                  key={cat.id}
-                  data-ocid="home.exam_category.button"
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    navigate({ to: "/exams" });
-                  }}
-                  className="flex flex-col items-center justify-center gap-1 p-3 border-2 rounded cursor-pointer hover:bg-blue-50 transition-colors text-center"
+                  data-ocid="home.live_test.primary_button"
+                  onClick={() => navigate({ to: "/live-test" })}
                   style={{
-                    borderColor: isSelected ? "#1565C0" : "#d0d0d0",
-                    backgroundColor: isSelected ? "#EEF4FF" : "#fafafa",
+                    background: "linear-gradient(135deg,#d32f2f,#b71c1c)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "12px 8px",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    boxShadow: "0 3px 8px rgba(211,47,47,0.4)",
+                    transition: "filter 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "brightness(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "none";
                   }}
                 >
-                  <Icon className={`w-6 h-6 ${cat.color}`} />
-                  <span className="text-xs font-semibold text-gray-700 leading-tight">
-                    {cat.label}
-                  </span>
+                  <span>⏱</span> Live Test
                 </button>
-              );
-            })}
+                <button
+                  type="button"
+                  data-ocid="home.practice.primary_button"
+                  onClick={() => navigate({ to: "/practice" })}
+                  style={{
+                    background: "linear-gradient(135deg,#1565c0,#0d47a1)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "12px 8px",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    boxShadow: "0 3px 8px rgba(21,101,192,0.4)",
+                    transition: "filter 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "brightness(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "none";
+                  }}
+                >
+                  <span>⌨️</span> Typing Practice
+                </button>
+                <button
+                  type="button"
+                  data-ocid="home.mock_test.primary_button"
+                  onClick={() => navigate({ to: "/mock-test" })}
+                  style={{
+                    background: "linear-gradient(135deg,#e65100,#bf360c)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "12px 8px",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    boxShadow: "0 3px 8px rgba(230,81,0,0.4)",
+                    transition: "filter 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "brightness(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "none";
+                  }}
+                >
+                  <span>📋</span> Mock Test
+                </button>
+                <button
+                  type="button"
+                  data-ocid="home.learning.primary_button"
+                  onClick={() => navigate({ to: "/learning" })}
+                  style={{
+                    background: "linear-gradient(135deg,#00695c,#004d40)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "12px 8px",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    boxShadow: "0 3px 8px rgba(0,105,92,0.4)",
+                    transition: "filter 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "brightness(1.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.filter =
+                      "none";
+                  }}
+                >
+                  <span>🎓</span> Learning Typing
+                </button>
+              </div>
+            </div>
+
+            {/* Gaming Right */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                width: 130,
+                flexShrink: 0,
+              }}
+            >
+              {GAMING_RIGHT.map((item) => (
+                <GamingCard
+                  key={item.id}
+                  item={item}
+                  onClick={() => navigate({ to: `/exam/${item.id}/test` })}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* EXAM GRID SECTION */}
+      <section
+        style={{ background: "#fff", margin: "12px 0", padding: "16px" }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                height: 2,
+                background: "linear-gradient(90deg,transparent,#1a3a8c)",
+              }}
+            />
+            <h2
+              style={{
+                color: "#1a3a8c",
+                fontStyle: "italic",
+                fontWeight: 800,
+                fontSize: 15,
+                margin: 0,
+                whiteSpace: "nowrap",
+                textAlign: "center",
+              }}
+            >
+              Prepare for All Competitive and Gaming Exams
+            </h2>
+            <div
+              style={{
+                flex: 1,
+                height: 2,
+                background: "linear-gradient(90deg,#1a3a8c,transparent)",
+              }}
+            />
           </div>
 
-          {/* Learn Typing mini link */}
-          <div className="mt-auto border-t border-gray-200 p-2">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(12, 1fr)",
+              gap: 6,
+              marginBottom: 6,
+            }}
+          >
+            {ROW1.map((tile) => (
+              <ExamTile
+                key={tile.label}
+                {...tile}
+                onClick={() => navigate({ to: tile.path as "/" })}
+              />
+            ))}
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(12, 1fr)",
+              gap: 6,
+            }}
+          >
+            {ROW2.map((tile) => (
+              <ExamTile
+                key={tile.label}
+                {...tile}
+                onClick={() => navigate({ to: tile.path as "/" })}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer
+        style={{
+          background: "linear-gradient(135deg,#1a3a8c 0%,#0d2060 100%)",
+          padding: "20px 16px",
+          textAlign: "center",
+        }}
+      >
+        {/* Social Icons */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 12,
+            marginBottom: 14,
+          }}
+        >
+          {SOCIAL.map((s) => (
+            <a
+              key={s.name}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-ocid={`footer.${s.name.toLowerCase()}.link`}
+              title={s.name}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                background:
+                  typeof s.bg === "string" && s.bg.startsWith("linear")
+                    ? s.bg
+                    : s.bg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: s.color,
+                fontSize: s.name === "Twitter" ? 15 : 18,
+                fontWeight: 900,
+                textDecoration: "none",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+                transition: "transform 0.15s",
+                border: "2px solid rgba(255,255,255,0.2)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform =
+                  "scale(1.15)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.transform = "none";
+              }}
+            >
+              {s.icon}
+            </a>
+          ))}
+          <a
+            href="mailto:manishkarwashra07@gmail.com"
+            data-ocid="footer.email.link"
+            title="Email"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              background: "#ea4335",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontSize: 18,
+              textDecoration: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+              transition: "transform 0.15s",
+              border: "2px solid rgba(255,255,255,0.2)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.transform =
+                "scale(1.15)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = "none";
+            }}
+          >
+            ✉️
+          </a>
+        </div>
+
+        {/* Footer Links */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 16,
+            marginBottom: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            "About Us",
+            "Contact Us",
+            "Privacy Policy",
+            "Terms & Conditions",
+          ].map((link) => (
             <button
+              key={link}
               type="button"
-              data-ocid="home.learn_typing.button"
-              onClick={() => navigate({ to: "/learn" })}
-              className="w-full text-xs font-semibold text-blue-700 hover:underline py-1"
+              style={{ color: "#a8c4ff", fontSize: 11, textDecoration: "none" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#a8c4ff";
+              }}
             >
-              <BookOpen className="inline w-3 h-3 mr-1" />
-              LEARN TYPING
+              {link}
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* Middle: Quick Start Practice */}
-        <div
-          className="flex flex-col overflow-hidden border-r border-gray-300"
-          style={{ width: "40%", backgroundColor: "#ffffff" }}
-        >
-          <div
-            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
-            style={{ backgroundColor: "#e8e8e8" }}
+        <div style={{ color: "#6080b0", fontSize: 11 }}>
+          © 2028 Karwashra Typing. All Rights Reserved. · Built with ❤️ using{" "}
+          <a
+            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#a8c4ff", textDecoration: "none" }}
           >
-            <span className="font-bold text-sm text-gray-800 uppercase tracking-wide">
-              QUICK START PRACTICE
-            </span>
-          </div>
-          <div className="flex flex-col gap-3 p-4 overflow-y-auto flex-1">
-            <div>
-              <span className="text-xs font-semibold text-gray-600 mb-1 block">
-                Session Type
-              </span>
-              <Select value={session} onValueChange={setSession}>
-                <SelectTrigger
-                  data-ocid="home.session.select"
-                  className="w-full text-sm border-gray-400"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SESSION_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button
-              data-ocid="home.start_practice.primary_button"
-              onClick={handleStartPractice}
-              className="w-full font-bold text-sm py-5 uppercase tracking-wide"
-              style={{ backgroundColor: "#1565C0" }}
-            >
-              START PRACTICE
-            </Button>
-
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-1">
-                Popular practice texts:
-              </p>
-              <div
-                className="border border-gray-300 rounded p-2 text-xs text-gray-700 leading-relaxed overflow-y-auto"
-                style={{ height: "160px", backgroundColor: "#fafafa" }}
-              >
-                {sampleText}
-              </div>
-            </div>
-
-            <div className="mt-auto">
-              <p className="text-xs text-gray-500 text-center">
-                All exams follow official scoring formulas.
-              </p>
-            </div>
-          </div>
+            caffeine.ai
+          </a>
         </div>
-
-        {/* Right: Live Typing Test Challenges */}
-        <div
-          className="flex flex-col overflow-hidden"
-          style={{ width: "27%", backgroundColor: "#ffffff" }}
-        >
-          <div
-            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
-            style={{ backgroundColor: "#e8e8e8" }}
-          >
-            <span className="font-bold text-xs text-gray-800 uppercase tracking-wide">
-              LIVE TYPING TEST CHALLENGES
-            </span>
-          </div>
-          <div className="flex flex-col overflow-y-auto flex-1 p-2 gap-2">
-            {/* Upcoming */}
-            <p className="text-xs font-bold text-gray-600 uppercase mt-1">
-              Upcoming Now
-            </p>
-            {upcomingSessions.length === 0 && (
-              <div
-                className="rounded p-2 border border-blue-200 text-xs"
-                style={{ backgroundColor: "#DBEAFE" }}
-              >
-                <p className="font-semibold text-gray-700">SSC CGL Mock</p>
-                <p className="text-gray-500">Start Time: 09:00 PM</p>
-                <p className="text-gray-500">Participants: 22</p>
-                <Button
-                  data-ocid="home.join_upcoming.button"
-                  size="sm"
-                  className="mt-1 w-full text-xs h-6"
-                  style={{ backgroundColor: "#1565C0" }}
-                  onClick={() => navigate({ to: "/live" })}
-                >
-                  Join Now
-                </Button>
-              </div>
-            )}
-            {upcomingSessions.map((s, i) => (
-              <div
-                key={s.roomId}
-                data-ocid={`home.upcoming_session.item.${i + 1}`}
-                className="rounded p-2 border border-blue-200 text-xs"
-                style={{ backgroundColor: "#DBEAFE" }}
-              >
-                <p className="font-semibold text-gray-700">
-                  {getExamName(s.examId)} Mock
-                </p>
-                <p className="text-gray-500">
-                  Start Time: {formatTime(s.startTime)}
-                </p>
-                <p className="text-gray-500">
-                  Participants: {String(s.participants.length)}
-                </p>
-                <Button
-                  data-ocid="home.join_upcoming.button"
-                  size="sm"
-                  className="mt-1 w-full text-xs h-6"
-                  style={{ backgroundColor: "#1565C0" }}
-                  onClick={() => navigate({ to: "/live" })}
-                >
-                  Join Now
-                </Button>
-              </div>
-            ))}
-
-            {/* Active */}
-            <p className="text-xs font-bold text-gray-600 uppercase mt-2">
-              Active Now
-            </p>
-            {activeSessions.length === 0 && (
-              <div
-                className="rounded p-2 border border-green-200 text-xs"
-                style={{ backgroundColor: "#DCFCE7" }}
-              >
-                <p className="font-semibold text-gray-700">RRB NTPC Mock</p>
-                <p className="text-gray-500">Start Time: 08:30 PM</p>
-                <p className="text-gray-500">Participants: 15</p>
-                <Button
-                  data-ocid="home.join_active.button"
-                  size="sm"
-                  className="mt-1 w-full text-xs h-6"
-                  style={{ backgroundColor: "#1565C0" }}
-                  onClick={() => navigate({ to: "/live" })}
-                >
-                  Join Now
-                </Button>
-              </div>
-            )}
-            {activeSessions.map((s, i) => (
-              <div
-                key={s.roomId}
-                data-ocid={`home.active_session.item.${i + 1}`}
-                className="rounded p-2 border border-green-200 text-xs"
-                style={{ backgroundColor: "#DCFCE7" }}
-              >
-                <p className="font-semibold text-gray-700">
-                  {getExamName(s.examId)} Mock
-                </p>
-                <p className="text-gray-500">
-                  Start Time: {formatTime(s.startTime)}
-                </p>
-                <p className="text-gray-500">
-                  Participants: {String(s.participants.length)}
-                </p>
-                <Button
-                  data-ocid="home.join_active.button"
-                  size="sm"
-                  className="mt-1 w-full text-xs h-6"
-                  style={{ backgroundColor: "#1565C0" }}
-                  onClick={() => navigate({ to: "/live" })}
-                >
-                  Join Now
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Learning Mode Section */}
-      <div
-        className="flex-shrink-0 border-t-2 border-gray-300 px-4 py-3"
-        style={{ backgroundColor: "#ffffff" }}
-      >
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="mr-4">
-            <p className="font-bold text-sm text-gray-800 uppercase tracking-wide">
-              LEARNING MODE
-            </p>
-            <p className="text-xs text-gray-500">
-              Keyboard mastery for competitive exam preparation
-            </p>
-          </div>
-          <Button
-            data-ocid="home.row_practice.button"
-            size="sm"
-            className="text-xs font-semibold"
-            style={{ backgroundColor: "#1565C0" }}
-            onClick={() => navigate({ to: "/learn" })}
-          >
-            ROW PRACTICE (Home, Top, Bottom)
-          </Button>
-          <Button
-            data-ocid="home.symbol_number.button"
-            size="sm"
-            className="text-xs font-semibold"
-            style={{ backgroundColor: "#16A34A" }}
-            onClick={() => navigate({ to: "/learn" })}
-          >
-            SYMBOL &amp; NUMBER
-          </Button>
-          <Button
-            data-ocid="home.finger_position.button"
-            size="sm"
-            variant="secondary"
-            className="text-xs font-semibold"
-            onClick={() => navigate({ to: "/learn" })}
-          >
-            FINGER POSITION
-          </Button>
-          <Button
-            data-ocid="home.accuracy_drills.button"
-            size="sm"
-            className="text-xs font-semibold"
-            style={{ backgroundColor: "#38BDF8", color: "#0f172a" }}
-            onClick={() => navigate({ to: "/learn" })}
-          >
-            ACCURACY DRILLS
-          </Button>
-        </div>
-      </div>
-
-      {/* Status Bar */}
-      <div
-        className="flex-shrink-0 px-4 py-1"
-        style={{ backgroundColor: "#0D1B3E" }}
-      >
-        <p className="text-xs text-gray-300">
-          Active Users Online: 12,450 | Latest Result: Rakesh – 55 WPM |
-          Premium: Trial Active | Mode: Exam Prep
-        </p>
-      </div>
+      </footer>
     </div>
   );
 }
