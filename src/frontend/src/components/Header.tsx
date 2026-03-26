@@ -33,7 +33,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-navy shadow-lg">
+    <header className="sticky top-0 z-50 bg-navy shadow-lg border-b border-blue-500/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link
@@ -60,9 +60,9 @@ export function Header() {
                 key={link.to}
                 to={link.to}
                 data-ocid="header.link"
-                className={`text-xs font-semibold tracking-widest uppercase transition-colors flex items-center gap-1 ${
+                className={`relative text-xs font-semibold tracking-widest uppercase transition-colors flex items-center gap-1 ${
                   location.pathname === link.to
-                    ? "text-white border-b-2 border-blue-brand-light pb-0.5"
+                    ? "text-white"
                     : "text-blue-100/80 hover:text-white"
                 } ${
                   link.to === "/learn"
@@ -72,6 +72,9 @@ export function Header() {
               >
                 {link.to === "/learn" && <BookOpen className="w-3 h-3" />}
                 {link.label}
+                {location.pathname === link.to && (
+                  <span className="absolute -bottom-5 left-0 right-0 h-0.5 bg-blue-brand-light rounded-full" />
+                )}
               </Link>
             ))}
           </nav>

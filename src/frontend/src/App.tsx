@@ -21,12 +21,25 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 
 const queryClient = new QueryClient();
 
-const rootRoute = createRootRoute({
-  component: () => (
+function RootLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
+
+  if (isHome) {
+    return (
+      <>
+        <Outlet />
+        <Toaster />
+      </>
+    );
+  }
+
+  return (
     <div className="min-h-screen flex flex-col font-poppins">
       <Header />
       <div className="flex-1">
@@ -35,7 +48,11 @@ const rootRoute = createRootRoute({
       <Footer />
       <Toaster />
     </div>
-  ),
+  );
+}
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
 });
 
 const homeRoute = createRoute({

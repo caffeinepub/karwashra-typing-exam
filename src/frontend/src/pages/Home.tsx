@@ -1,423 +1,503 @@
-import { Badge } from "@/components/ui/badge";
+import type { LiveSessionPublic } from "@/backend";
 import { Button } from "@/components/ui/button";
-import { EXAMS } from "@/data/exams";
-import { Link } from "@tanstack/react-router";
 import {
-  ArrowRight,
-  Award,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EXAMS } from "@/data/exams";
+import { useActor } from "@/hooks/useActor";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import {
   BookOpen,
-  CheckCircle,
-  ChevronRight,
-  Clock,
-  Globe,
-  Target,
-  Zap,
+  Building2,
+  Gavel,
+  GraduationCap,
+  Landmark,
+  MoreHorizontal,
+  Train,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { useState } from "react";
 
-const POPULAR_EXAMS = EXAMS.slice(0, 8);
-
-const FEATURES = [
+const EXAM_CATEGORIES = [
   {
-    icon: Zap,
-    title: "Real-Time WPM",
-    desc: "Instant words-per-minute calculation as you type, just like the actual exam environment.",
+    id: "ssc",
+    label: "SSC CGL/CHSL",
+    icon: GraduationCap,
+    color: "text-red-600",
   },
+  { id: "rrb", label: "RRB NTPC", icon: Train, color: "text-red-600" },
   {
-    icon: Target,
-    title: "Accuracy Tracking",
-    desc: "Character-by-character accuracy monitoring with color-coded feedback for every keystroke.",
+    id: "state",
+    label: "STATE GOVT",
+    icon: Landmark,
+    color: "text-orange-600",
   },
+  { id: "court", label: "COURT EXAMS", icon: Gavel, color: "text-blue-700" },
+  { id: "banking", label: "BANKING", icon: Building2, color: "text-green-700" },
   {
-    icon: Clock,
-    title: "Exam Timer",
-    desc: "Countdown timer matching official exam durations — 10 to 15 minutes as per exam rules.",
-  },
-  {
-    icon: CheckCircle,
-    title: "Exam-Specific Rules",
-    desc: "Each test follows official rules — WPM threshold, accuracy %, and passage style per exam.",
-  },
-  {
-    icon: Globe,
-    title: "Hindi & English",
-    desc: "Practice in both Hindi (Devanagari) and English passages for bilingual exams.",
-  },
-  {
-    icon: Award,
-    title: "Pass/Fail Result",
-    desc: "Instant result with detailed breakdown — WPM achieved vs required, accuracy, and errors.",
+    id: "other",
+    label: "OTHER EXAMS",
+    icon: MoreHorizontal,
+    color: "text-gray-600",
   },
 ];
 
-const TESTIMONIALS = [
+const SESSION_OPTIONS = [
+  { value: "en-10", label: "English 10-minute session" },
+  { value: "hi-10", label: "Hindi 10-minute session" },
+  { value: "en-5", label: "English 5-minute session" },
+  { value: "hi-5", label: "Hindi 5-minute session" },
+];
+
+const SAMPLE_TEXT_EN =
+  "The Staff Selection Commission conducts the Combined Higher Secondary Level examination every year for recruitment to various posts in Government of India. Candidates from Chandigarh, Rohtak, Hisar, Karnal and other cities of Haryana participate in large numbers. The examination tests typing speed and accuracy on computer. Practice daily to improve your words per minute and achieve success in the examination.";
+
+const SAMPLE_TEXT_HI =
+  "भारत सरकार के विभिन्न विभागों में भर्ती के लिए कर्मचारी चयन आयोग प्रतिवर्ष परीक्षाएं आयोजित करता है। चंडीगढ़, रोहतक, हिसार, करनाल और गुरुग्राम के अभ्यर्थी बड़ी संख्या में परीक्षा में भाग लेते हैं। कंप्यूटर पर टाइपिंग गति और सटीकता का परीक्षण किया जाता है।";
+
+const MOCK_SESSIONS: LiveSessionPublic[] = [
   {
-    name: "Rahul Sharma",
-    role: "SSC CHSL Qualifier 2024",
-    avatar: "RS",
-    text: "Karwashra helped me go from 28 WPM to 40 WPM in just 3 weeks. The real exam-style passages made all the difference. I qualified comfortably!",
+    roomId: "mock-1",
+    examId: "ssc-chsl",
+    examName: "SSC CGL Mock",
+    timeLimit: BigInt(10),
+    startTime: BigInt(Date.now()) * BigInt(1_000_000),
+    isActive: false,
+    participants: [],
   },
   {
-    name: "Priya Verma",
-    role: "RRB NTPC Qualifier 2024",
-    avatar: "PV",
-    text: "The Hindi typing practice on this platform is excellent. I practiced for the NTPC Hindi test and cleared with 28 WPM — well above the requirement.",
-  },
-  {
-    name: "Amit Kumar",
-    role: "Bank Clerk Qualifier 2023",
-    avatar: "AK",
-    text: "The pass/fail result with detailed stats helped me identify my weak areas. After two weeks of targeted practice, I passed my Bank Clerk typing test easily.",
+    roomId: "mock-2",
+    examId: "rrb-ntpc",
+    examName: "RRB NTPC Mock",
+    timeLimit: BigInt(10),
+    startTime: BigInt(Date.now()) * BigInt(1_000_000),
+    isActive: true,
+    participants: [],
   },
 ];
+
+type TabId =
+  | "select-exam"
+  | "start-test"
+  | "pause"
+  | "show-results"
+  | "history"
+  | "settings";
 
 export function Home() {
+  const navigate = useNavigate();
+  const { actor, isFetching } = useActor();
+  const [activeTab, setActiveTab] = useState<TabId>("select-exam");
+  const [selectedCategory, setSelectedCategory] = useState("ssc");
+  const [session, setSession] = useState("en-10");
+
+  const sessionsQuery = useQuery<LiveSessionPublic[]>({
+    queryKey: ["activeSessions-home"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getActiveLiveSessions();
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 10000,
+  });
+
+  const liveSessions = sessionsQuery.data ?? MOCK_SESSIONS;
+  const upcomingSessions = liveSessions.filter((s) => !s.isActive);
+  const activeSessions = liveSessions.filter((s) => s.isActive);
+
+  const handleTabClick = (tab: TabId) => {
+    setActiveTab(tab);
+    if (tab === "start-test") navigate({ to: "/exams" });
+    else if (tab === "show-results" || tab === "history")
+      navigate({ to: "/dashboard" });
+  };
+
+  const handleStartPractice = () => {
+    const isHindi = session.startsWith("hi");
+    const firstExam = EXAMS.find((e) =>
+      isHindi ? e.language === "Hindi" : e.language === "English",
+    );
+    if (firstExam)
+      navigate({ to: "/exam/$id/test", params: { id: firstExam.id } });
+    else navigate({ to: "/exams" });
+  };
+
+  const sampleText = session.startsWith("hi") ? SAMPLE_TEXT_HI : SAMPLE_TEXT_EN;
+
+  const getExamName = (examId: string) => {
+    const exam = EXAMS.find((e) => e.id === examId);
+    return exam?.name ?? examId.toUpperCase();
+  };
+
+  const formatTime = (createdAt: bigint) => {
+    try {
+      const ms = Number(createdAt) / 1_000_000;
+      return new Date(ms).toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "09:00 PM";
+    }
+  };
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: "select-exam", label: "SELECT EXAM" },
+    { id: "start-test", label: "START TEST" },
+    { id: "pause", label: "PAUSE" },
+    { id: "show-results", label: "SHOW RESULTS" },
+    { id: "history", label: "HISTORY" },
+    { id: "settings", label: "SETTINGS" },
+  ];
+
   return (
-    <main>
-      {/* Hero Section */}
-      <section
-        className="relative min-h-[600px] flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage:
-            "url('/assets/generated/hero-typing-exam.dim_1600x900.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+    <div
+      className="h-screen flex flex-col"
+      style={{ fontFamily: "Arial, sans-serif" }}
+    >
+      {/* Blue Header Bar */}
+      <div
+        data-ocid="home.section"
+        className="flex items-center justify-between px-4 py-2 flex-shrink-0"
+        style={{ backgroundColor: "#1565C0" }}
       >
-        <div className="absolute inset-0 bg-navy-dark/80" />
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <Badge className="bg-blue-brand/30 text-blue-100 border-blue-brand/50 mb-6 text-xs tracking-wider uppercase">
-              Official Exam Practice Platform
-            </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-poppins font-bold text-white leading-tight mb-4">
-              Practice Government
-              <span className="text-blue-brand-light"> Typing Exams</span>
-            </h1>
-            <p className="text-lg text-white/75 max-w-2xl mx-auto mb-8">
-              SSC • RRB NTPC • Bank • High Court • HSSC • LDC • DEO — all exams
-              with official rules, real passages, and instant results.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/exams">
-                <Button
-                  size="lg"
-                  className="bg-blue-brand hover:bg-blue-brand-light text-white font-semibold px-8 rounded-full shadow-lg"
-                  data-ocid="home.primary_button"
-                >
-                  Start Free Test <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-              <Link to="/exams">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/40 text-white hover:bg-white/10 font-semibold px-8 rounded-full"
-                  data-ocid="home.secondary_button"
-                >
-                  View All Exams
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+        <span className="text-white font-bold text-lg tracking-wide">
+          KARWASHRA TYPING GOVT EXAM
+        </span>
+        <span className="text-white font-bold text-base">HOME PAGE</span>
+      </div>
 
-      {/* Learn Typing Banner */}
-      <section className="py-10 bg-gradient-to-r from-emerald-700 to-teal-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col md:flex-row items-center justify-between gap-6"
+      {/* Tab Navigation */}
+      <div
+        className="flex flex-shrink-0"
+        style={{ backgroundColor: "#0D1B3E" }}
+      >
+        {TABS.map((tab) => (
+          <button
+            type="button"
+            key={tab.id}
+            data-ocid={`home.${tab.id.replace("-", "_")}.tab`}
+            onClick={() => handleTabClick(tab.id)}
+            className="px-5 py-2 text-xs font-bold text-white uppercase tracking-wider border-r border-gray-600 hover:bg-blue-700 transition-colors"
+            style={{
+              backgroundColor: activeTab === tab.id ? "#1565C0" : "transparent",
+            }}
           >
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
-                <BookOpen className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-poppins font-bold text-white">
-                  New to Typing? Start Learning!
-                </h2>
-                <p className="text-white/80 text-sm mt-0.5 max-w-lg">
-                  Practice from basic letters to full sentences with structured
-                  Learn Typing lessons. Hindi & English both supported.
-                </p>
-              </div>
-            </div>
-            <Link to="/learn" className="shrink-0">
-              <Button
-                size="lg"
-                className="bg-white text-emerald-700 hover:bg-white/90 font-bold px-8 rounded-full shadow-lg whitespace-nowrap"
-                data-ocid="home.learn_button"
-              >
-                Start Learning Free <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Popular Exams Grid */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl font-poppins font-bold text-navy mb-3">
-              POPULAR EXAM TYPING TESTS
-            </h2>
-            <div className="w-16 h-1 bg-blue-brand mx-auto rounded-full" />
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-sm">
-              Practice with officially structured tests for every major
-              government exam typing requirement.
-            </p>
-          </motion.div>
-
+      {/* 3-Column Content Area */}
+      <div
+        className="flex flex-1 overflow-hidden"
+        style={{ backgroundColor: "#f0f0f0" }}
+      >
+        {/* Left: Exam Categories */}
+        <div
+          className="flex flex-col overflow-hidden border-r border-gray-300"
+          style={{ width: "33%", backgroundColor: "#ffffff" }}
+        >
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-            data-ocid="exams.list"
+            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
+            style={{ backgroundColor: "#e8e8e8" }}
           >
-            {POPULAR_EXAMS.map((exam, i) => (
-              <motion.div
-                key={exam.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.05 }}
-                data-ocid={`exams.item.${i + 1}`}
-              >
-                <div className="bg-white border border-border rounded-xl p-5 shadow-card hover:shadow-card-hover transition-all group h-full flex flex-col">
-                  <div className="flex items-start justify-between mb-3">
-                    <Badge className="bg-navy/10 text-navy text-xs font-semibold">
-                      {exam.category}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {exam.language}
-                    </span>
-                  </div>
-                  <h3 className="font-poppins font-bold text-navy text-base mb-1">
-                    {exam.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-3 flex-1">
-                    {exam.authority}
-                  </p>
-                  <div className="space-y-1 mb-4">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        Required WPM
-                      </span>
-                      <span className="font-semibold text-blue-brand">
-                        {exam.requiredWPM > 0
-                          ? `${exam.requiredWPM} WPM`
-                          : "15000 KDPH"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Duration</span>
-                      <span className="font-semibold text-foreground">
-                        {exam.timeMin} min
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Accuracy</span>
-                      <span className="font-semibold text-foreground">
-                        {exam.accuracy}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link
-                      to="/exam/$id/test"
-                      params={{ id: exam.id }}
-                      className="flex-1"
-                    >
-                      <Button
-                        size="sm"
-                        className="w-full bg-blue-brand hover:bg-blue-brand-light text-white text-xs font-semibold rounded-full"
-                        data-ocid={`exams.item.${i + 1}`}
-                      >
-                        Take Test
-                      </Button>
-                    </Link>
-                    <Link to="/exam/$id/rules" params={{ id: exam.id }}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-xs text-navy border-navy/30 hover:bg-navy/5 rounded-full px-3"
-                        data-ocid={`exams.item.${i + 1}`}
-                      >
-                        Rules
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            <span className="font-bold text-sm text-gray-800 uppercase tracking-wide">
+              EXAM CATEGORIES
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 p-3 overflow-y-auto">
+            {EXAM_CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  type="button"
+                  key={cat.id}
+                  data-ocid="home.exam_category.button"
+                  onClick={() => {
+                    setSelectedCategory(cat.id);
+                    navigate({ to: "/exams" });
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 p-3 border-2 rounded cursor-pointer hover:bg-blue-50 transition-colors text-center"
+                  style={{
+                    borderColor: isSelected ? "#1565C0" : "#d0d0d0",
+                    backgroundColor: isSelected ? "#EEF4FF" : "#fafafa",
+                  }}
+                >
+                  <Icon className={`w-6 h-6 ${cat.color}`} />
+                  <span className="text-xs font-semibold text-gray-700 leading-tight">
+                    {cat.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="text-center mt-10">
-            <Link to="/exams">
-              <Button
-                variant="outline"
-                className="border-navy text-navy hover:bg-navy hover:text-white font-semibold rounded-full px-8"
-                data-ocid="home.secondary_button"
-              >
-                View All Exams <ChevronRight className="ml-1 w-4 h-4" />
-              </Button>
-            </Link>
+          {/* Learn Typing mini link */}
+          <div className="mt-auto border-t border-gray-200 p-2">
+            <button
+              type="button"
+              data-ocid="home.learn_typing.button"
+              onClick={() => navigate({ to: "/learn" })}
+              className="w-full text-xs font-semibold text-blue-700 hover:underline py-1"
+            >
+              <BookOpen className="inline w-3 h-3 mr-1" />
+              LEARN TYPING
+            </button>
           </div>
         </div>
-      </section>
 
-      {/* Highlight Band */}
-      <section className="bg-gradient-blue py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+        {/* Middle: Quick Start Practice */}
+        <div
+          className="flex flex-col overflow-hidden border-r border-gray-300"
+          style={{ width: "40%", backgroundColor: "#ffffff" }}
+        >
+          <div
+            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
+            style={{ backgroundColor: "#e8e8e8" }}
           >
-            <h2 className="text-3xl font-poppins font-bold text-white mb-3">
-              Advanced Typing Test Interface
-            </h2>
-            <p className="text-white/75 max-w-xl mx-auto mb-10 text-sm">
-              Real-time character highlighting, live WPM counter, accuracy
-              percentage — exactly as you'll face in the actual exam hall.
-            </p>
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 max-w-3xl mx-auto shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
-                </div>
-                <div className="text-white/70 text-xs font-mono">
-                  SSC CHSL — Typing Test
-                </div>
-                <div className="text-white font-bold text-sm font-mono">
-                  09:32
-                </div>
-              </div>
-              <div className="bg-white/5 rounded-xl p-4 text-left mb-4">
-                <p className="text-sm leading-loose font-mono">
-                  <span className="text-green-400">
-                    The Government of India has always given{" "}
-                  </span>
-                  <span className="text-blue-300 underline font-bold">p</span>
-                  <span className="text-white/60">
-                    riority to the welfare of its citizens through various
-                    developmental schemes.
-                  </span>
-                </p>
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                {[
-                  { label: "WPM", value: "38" },
-                  { label: "Accuracy", value: "96.2%" },
-                  { label: "Errors", value: "2" },
-                  { label: "Time", value: "9:32" },
-                ].map(({ label, value }) => (
-                  <div
-                    key={label}
-                    className="bg-white/10 rounded-lg p-2 text-center"
-                  >
-                    <div className="text-white font-bold text-lg">{value}</div>
-                    <div className="text-white/60 text-xs">{label}</div>
-                  </div>
-                ))}
+            <span className="font-bold text-sm text-gray-800 uppercase tracking-wide">
+              QUICK START PRACTICE
+            </span>
+          </div>
+          <div className="flex flex-col gap-3 p-4 overflow-y-auto flex-1">
+            <div>
+              <span className="text-xs font-semibold text-gray-600 mb-1 block">
+                Session Type
+              </span>
+              <Select value={session} onValueChange={setSession}>
+                <SelectTrigger
+                  data-ocid="home.session.select"
+                  className="w-full text-sm border-gray-400"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SESSION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              data-ocid="home.start_practice.primary_button"
+              onClick={handleStartPractice}
+              className="w-full font-bold text-sm py-5 uppercase tracking-wide"
+              style={{ backgroundColor: "#1565C0" }}
+            >
+              START PRACTICE
+            </Button>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-1">
+                Popular practice texts:
+              </p>
+              <div
+                className="border border-gray-300 rounded p-2 text-xs text-gray-700 leading-relaxed overflow-y-auto"
+                style={{ height: "160px", backgroundColor: "#fafafa" }}
+              >
+                {sampleText}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-poppins font-bold text-navy mb-3">
-              OUR TYPING EXAM KEY FEATURES
-            </h2>
-            <div className="w-16 h-1 bg-blue-brand mx-auto rounded-full" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map(({ icon: Icon, title, desc }, i) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-                className="flex gap-4 p-5 rounded-xl hover:bg-muted/50 transition-colors"
-              >
-                <div className="w-11 h-11 bg-navy/10 rounded-xl flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-navy" />
-                </div>
-                <div>
-                  <h3 className="font-poppins font-semibold text-navy mb-1">
-                    {title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+            <div className="mt-auto">
+              <p className="text-xs text-gray-500 text-center">
+                All exams follow official scoring formulas.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Testimonials */}
-      <section className="py-16 bg-light-gray">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-poppins font-bold text-navy mb-3">
-              WHAT OUR STUDENTS SAY
-            </h2>
-            <div className="w-16 h-1 bg-blue-brand mx-auto rounded-full" />
+        {/* Right: Live Typing Test Challenges */}
+        <div
+          className="flex flex-col overflow-hidden"
+          style={{ width: "27%", backgroundColor: "#ffffff" }}
+        >
+          <div
+            className="px-3 py-2 border-b border-gray-300 flex-shrink-0"
+            style={{ backgroundColor: "#e8e8e8" }}
+          >
+            <span className="font-bold text-xs text-gray-800 uppercase tracking-wide">
+              LIVE TYPING TEST CHALLENGES
+            </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-card"
-                data-ocid={`testimonials.item.${i + 1}`}
+          <div className="flex flex-col overflow-y-auto flex-1 p-2 gap-2">
+            {/* Upcoming */}
+            <p className="text-xs font-bold text-gray-600 uppercase mt-1">
+              Upcoming Now
+            </p>
+            {upcomingSessions.length === 0 && (
+              <div
+                className="rounded p-2 border border-blue-200 text-xs"
+                style={{ backgroundColor: "#DBEAFE" }}
               >
-                <p className="text-muted-foreground text-sm leading-relaxed mb-5 italic">
-                  "{t.text}"
+                <p className="font-semibold text-gray-700">SSC CGL Mock</p>
+                <p className="text-gray-500">Start Time: 09:00 PM</p>
+                <p className="text-gray-500">Participants: 22</p>
+                <Button
+                  data-ocid="home.join_upcoming.button"
+                  size="sm"
+                  className="mt-1 w-full text-xs h-6"
+                  style={{ backgroundColor: "#1565C0" }}
+                  onClick={() => navigate({ to: "/live" })}
+                >
+                  Join Now
+                </Button>
+              </div>
+            )}
+            {upcomingSessions.map((s, i) => (
+              <div
+                key={s.roomId}
+                data-ocid={`home.upcoming_session.item.${i + 1}`}
+                className="rounded p-2 border border-blue-200 text-xs"
+                style={{ backgroundColor: "#DBEAFE" }}
+              >
+                <p className="font-semibold text-gray-700">
+                  {getExamName(s.examId)} Mock
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-navy text-sm">
-                      {t.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {t.role}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                <p className="text-gray-500">
+                  Start Time: {formatTime(s.startTime)}
+                </p>
+                <p className="text-gray-500">
+                  Participants: {String(s.participants.length)}
+                </p>
+                <Button
+                  data-ocid="home.join_upcoming.button"
+                  size="sm"
+                  className="mt-1 w-full text-xs h-6"
+                  style={{ backgroundColor: "#1565C0" }}
+                  onClick={() => navigate({ to: "/live" })}
+                >
+                  Join Now
+                </Button>
+              </div>
+            ))}
+
+            {/* Active */}
+            <p className="text-xs font-bold text-gray-600 uppercase mt-2">
+              Active Now
+            </p>
+            {activeSessions.length === 0 && (
+              <div
+                className="rounded p-2 border border-green-200 text-xs"
+                style={{ backgroundColor: "#DCFCE7" }}
+              >
+                <p className="font-semibold text-gray-700">RRB NTPC Mock</p>
+                <p className="text-gray-500">Start Time: 08:30 PM</p>
+                <p className="text-gray-500">Participants: 15</p>
+                <Button
+                  data-ocid="home.join_active.button"
+                  size="sm"
+                  className="mt-1 w-full text-xs h-6"
+                  style={{ backgroundColor: "#1565C0" }}
+                  onClick={() => navigate({ to: "/live" })}
+                >
+                  Join Now
+                </Button>
+              </div>
+            )}
+            {activeSessions.map((s, i) => (
+              <div
+                key={s.roomId}
+                data-ocid={`home.active_session.item.${i + 1}`}
+                className="rounded p-2 border border-green-200 text-xs"
+                style={{ backgroundColor: "#DCFCE7" }}
+              >
+                <p className="font-semibold text-gray-700">
+                  {getExamName(s.examId)} Mock
+                </p>
+                <p className="text-gray-500">
+                  Start Time: {formatTime(s.startTime)}
+                </p>
+                <p className="text-gray-500">
+                  Participants: {String(s.participants.length)}
+                </p>
+                <Button
+                  data-ocid="home.join_active.button"
+                  size="sm"
+                  className="mt-1 w-full text-xs h-6"
+                  style={{ backgroundColor: "#1565C0" }}
+                  onClick={() => navigate({ to: "/live" })}
+                >
+                  Join Now
+                </Button>
+              </div>
             ))}
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+
+      {/* Learning Mode Section */}
+      <div
+        className="flex-shrink-0 border-t-2 border-gray-300 px-4 py-3"
+        style={{ backgroundColor: "#ffffff" }}
+      >
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="mr-4">
+            <p className="font-bold text-sm text-gray-800 uppercase tracking-wide">
+              LEARNING MODE
+            </p>
+            <p className="text-xs text-gray-500">
+              Keyboard mastery for competitive exam preparation
+            </p>
+          </div>
+          <Button
+            data-ocid="home.row_practice.button"
+            size="sm"
+            className="text-xs font-semibold"
+            style={{ backgroundColor: "#1565C0" }}
+            onClick={() => navigate({ to: "/learn" })}
+          >
+            ROW PRACTICE (Home, Top, Bottom)
+          </Button>
+          <Button
+            data-ocid="home.symbol_number.button"
+            size="sm"
+            className="text-xs font-semibold"
+            style={{ backgroundColor: "#16A34A" }}
+            onClick={() => navigate({ to: "/learn" })}
+          >
+            SYMBOL &amp; NUMBER
+          </Button>
+          <Button
+            data-ocid="home.finger_position.button"
+            size="sm"
+            variant="secondary"
+            className="text-xs font-semibold"
+            onClick={() => navigate({ to: "/learn" })}
+          >
+            FINGER POSITION
+          </Button>
+          <Button
+            data-ocid="home.accuracy_drills.button"
+            size="sm"
+            className="text-xs font-semibold"
+            style={{ backgroundColor: "#38BDF8", color: "#0f172a" }}
+            onClick={() => navigate({ to: "/learn" })}
+          >
+            ACCURACY DRILLS
+          </Button>
+        </div>
+      </div>
+
+      {/* Status Bar */}
+      <div
+        className="flex-shrink-0 px-4 py-1"
+        style={{ backgroundColor: "#0D1B3E" }}
+      >
+        <p className="text-xs text-gray-300">
+          Active Users Online: 12,450 | Latest Result: Rakesh – 55 WPM |
+          Premium: Trial Active | Mode: Exam Prep
+        </p>
+      </div>
+    </div>
   );
 }
