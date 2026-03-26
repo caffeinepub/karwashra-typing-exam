@@ -449,23 +449,31 @@ export const PASSAGES: Record<string, string[]> = {
   ],
 };
 
-export function getPassagesForExam(exam: ExamData): string[] {
-  if (exam.language.toLowerCase().includes("hindi")) {
-    return [...PASSAGES.hindi, ...PASSAGES.english];
+export function getPassagesForExam(
+  exam: ExamData,
+  languageOverride?: string,
+): string[] {
+  const lang = languageOverride ?? exam.language;
+  if (lang.toLowerCase().includes("hindi")) {
+    return PASSAGES.hindi;
   }
   return PASSAGES.english;
 }
 
-export function getRandomPassage(exam: ExamData): string {
-  const passages = getPassagesForExam(exam);
+export function getRandomPassage(
+  exam: ExamData,
+  languageOverride?: string,
+): string {
+  const passages = getPassagesForExam(exam, languageOverride);
   return passages[Math.floor(Math.random() * passages.length)];
 }
 
 export function generatePassageOfLength(
   exam: ExamData,
   wordCount: number,
+  languageOverride?: string,
 ): string {
-  const basePassages = getPassagesForExam(exam);
+  const basePassages = getPassagesForExam(exam, languageOverride);
   const allWords = basePassages
     .join(" ")
     .split(" ")

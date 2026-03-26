@@ -3,15 +3,39 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { EXAMS, generatePassageOfLength } from "@/data/exams";
+import { useActor } from "@/hooks/useActor";
+import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Highlighter, Play, RotateCcw, Timer } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Highlighter,
+  Play,
+  Radio,
+  RotateCcw,
+  Timer,
+  User,
+} from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type TestState = "idle" | "running" | "finished";
 
 const TIME_PRESETS = [1, 2, 5, 10, 15, 20];
 
-function PassageDisplay({
+function generateSessionId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/** Get available language options for an exam */
+function getLanguageOptions(examLanguage: string): string[] {
+  const lang = examLanguage.toLowerCase();
+  if (lang.includes("hindi") && lang.includes("english"))
+    return ["English", "Hindi"];
+  if (lang.includes("hindi")) return ["Hindi", "English"];
+  return ["English"];
+}
+
+// Memoized passage display for performance — avoids re-render on every keystroke
+const PassageDisplay = memo(function PassageDisplay({
   passage,
   typed,
   highlightEnabled,
@@ -22,79 +46,109 @@ function PassageDisplay({
   highlightEnabled: boolean;
   fontSize: number;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentCharRef = useRef<HTMLSpanElement>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: typed.length triggers scroll
+  useEffect(() => {
+    if (currentCharRef.current && containerRef.current) {
+      const container = containerRef.current;
+      const el = currentCharRef.current;
+      const elTop = el.offsetTop - container.offsetTop;
+      const elBottom = elTop + el.offsetHeight;
+      const containerScrollTop = container.scrollTop;
+      const containerBottom = containerScrollTop + container.clientHeight;
+
+      if (elBottom > containerBottom - 40) {
+        container.scrollTop = elTop - container.clientHeight / 2;
+      } else if (elTop < containerScrollTop + 20) {
+        container.scrollTop = elTop - 20;
+      }
+    }
+  }, [typed.length]);
+
   const segments: { text: string; startIndex: number }[] = [];
   let i = 0;
   while (i < passage.length) {
     const spaceStart = i;
     while (i < passage.length && passage[i] === " ") i++;
-    if (i > spaceStart) {
+    if (i > spaceStart)
       segments.push({
         text: passage.slice(spaceStart, i),
         startIndex: spaceStart,
       });
-    }
     const wordStart = i;
     while (i < passage.length && passage[i] !== " ") i++;
-    if (i > wordStart) {
+    if (i > wordStart)
       segments.push({
         text: passage.slice(wordStart, i),
         startIndex: wordStart,
       });
-    }
   }
-
   const cursorPos = typed.length;
 
   return (
     <div
-      className="font-mono leading-loose select-none"
-      style={{ fontSize: `${fontSize}px` }}
+      ref={containerRef}
+      className="overflow-y-auto"
+      style={{ maxHeight: "180px" }}
     >
-      {segments.map((seg) => {
-        const isCurrentWord =
-          highlightEnabled &&
-          cursorPos >= seg.startIndex &&
-          cursorPos < seg.startIndex + seg.text.length;
-
-        const chars = seg.text.split("").map((char, ci) => {
-          const globalIndex = seg.startIndex + ci;
-          let cls = "passage-upcoming";
-          if (!highlightEnabled) {
-            cls = "text-gray-400";
-          } else if (globalIndex < typed.length) {
-            cls =
-              typed[globalIndex] === char ? "passage-correct" : "passage-error";
-          } else if (globalIndex === typed.length) {
-            cls = "passage-current";
-          }
+      <div
+        className="font-mono leading-loose select-none"
+        style={{ fontSize: `${fontSize}px` }}
+      >
+        {segments.map((seg) => {
+          const isCurrentWord =
+            highlightEnabled &&
+            cursorPos >= seg.startIndex &&
+            cursorPos < seg.startIndex + seg.text.length;
+          const chars = seg.text.split("").map((char, ci) => {
+            const gi = seg.startIndex + ci;
+            let cls = "passage-upcoming";
+            if (!highlightEnabled) cls = "text-gray-400";
+            else if (gi < typed.length)
+              cls = typed[gi] === char ? "passage-correct" : "passage-error";
+            else if (gi === typed.length) cls = "passage-current";
+            const isCurrent = gi === typed.length;
+            return (
+              <span
+                key={`c-${gi}`}
+                className={cls}
+                ref={isCurrent ? currentCharRef : undefined}
+              >
+                {char}
+              </span>
+            );
+          });
           return (
-            <span key={`c-${globalIndex}`} className={cls}>
-              {char}
+            <span
+              key={`seg-${seg.startIndex}`}
+              className={
+                isCurrentWord
+                  ? "bg-yellow-100 rounded px-0.5 text-[1.08em] transition-all duration-100"
+                  : ""
+              }
+            >
+              {chars}
             </span>
           );
-        });
-
-        return (
-          <span
-            key={`seg-${seg.startIndex}`}
-            className={
-              isCurrentWord
-                ? "bg-yellow-100 rounded px-0.5 text-[1.08em] transition-all duration-100"
-                : ""
-            }
-          >
-            {chars}
-          </span>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
-}
+});
 
 export function TypingTest() {
   const { id } = useParams({ strict: false }) as { id: string };
   const navigate = useNavigate();
+  const { auth, isLoggedIn } = useAuth();
+  const { actor } = useActor();
   const exam = EXAMS.find((e) => e.id === id);
+
+  const languageOptions = useMemo(
+    () => (exam ? getLanguageOptions(exam.language) : ["English"]),
+    [exam],
+  );
 
   const [passage, setPassage] = useState("");
   const [typed, setTyped] = useState("");
@@ -106,6 +160,9 @@ export function TypingTest() {
   const [selectedTimeMin, setSelectedTimeMin] = useState(exam?.timeMin ?? 10);
   const [paragraphWords, setParagraphWords] = useState(400);
   const [fontSize, setFontSize] = useState(16);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(
+    languageOptions[0],
+  );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -113,12 +170,14 @@ export function TypingTest() {
   const resetTest = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (exam) {
-      setPassage(generatePassageOfLength(exam, paragraphWords));
+      setPassage(
+        generatePassageOfLength(exam, paragraphWords, selectedLanguage),
+      );
       setTimeLeft(selectedTimeMin * 60);
     }
     setTyped("");
     setState("idle");
-  }, [exam, paragraphWords, selectedTimeMin]);
+  }, [exam, paragraphWords, selectedTimeMin, selectedLanguage]);
 
   useEffect(() => {
     resetTest();
@@ -144,13 +203,13 @@ export function TypingTest() {
   };
 
   const finishTest = useCallback(
-    (finalTyped: string) => {
+    async (finalTyped: string) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setState("finished");
       const elapsed = (Date.now() - startTime) / 60000;
       const correctChars = finalTyped
         .split("")
-        .filter((c, i) => c === passage[i]).length;
+        .filter((c, idx) => c === passage[idx]).length;
       const totalTyped = finalTyped.length;
       const wpm = elapsed > 0 ? Math.round(correctChars / 5 / elapsed) : 0;
       const accuracy =
@@ -163,12 +222,33 @@ export function TypingTest() {
       let correctWords = 0;
       let wrongWords = 0;
       passageWords.forEach((word, idx) => {
-        if (typedWords[idx] === word) {
-          correctWords++;
-        } else if (typedWords[idx] !== undefined) {
-          wrongWords++;
-        }
+        if (typedWords[idx] === word) correctWords++;
+        else if (typedWords[idx] !== undefined) wrongWords++;
       });
+
+      const passed = exam
+        ? wpm >= exam.requiredWPM && accuracy >= exam.accuracy
+        : false;
+
+      if (isLoggedIn && auth?.token && exam && actor) {
+        const sessionId = generateSessionId();
+        try {
+          await actor.submitResult(
+            auth.token,
+            sessionId,
+            exam.id,
+            exam.name,
+            BigInt(wpm),
+            BigInt(accuracy),
+            BigInt(errors),
+            BigInt(timeTaken),
+            passed,
+            selectedLanguage,
+          );
+        } catch {
+          /* ignore save errors */
+        }
+      }
 
       navigate({
         to: "/exam/$id/result",
@@ -183,7 +263,19 @@ export function TypingTest() {
         },
       });
     },
-    [startTime, passage, timeLeft, selectedTimeMin, id, navigate],
+    [
+      startTime,
+      passage,
+      timeLeft,
+      selectedTimeMin,
+      id,
+      navigate,
+      isLoggedIn,
+      auth,
+      exam,
+      actor,
+      selectedLanguage,
+    ],
   );
 
   const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -191,31 +283,33 @@ export function TypingTest() {
     const value = e.target.value;
     if (value.length > passage.length) return;
     setTyped(value);
-    if (value.length === passage.length) {
-      finishTest(value);
-    }
+    if (value.length === passage.length) finishTest(value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!backspaceAllowed && e.key === "Backspace") {
-      e.preventDefault();
-    }
+    if (!backspaceAllowed && e.key === "Backspace") e.preventDefault();
   };
 
-  const elapsed =
-    state === "running" && startTime > 0 ? (Date.now() - startTime) / 60000 : 0;
-  const correctChars = typed
-    .split("")
-    .filter((c, i) => c === passage[i]).length;
-  const wpm = elapsed > 0 ? Math.round(correctChars / 5 / elapsed) : 0;
-  const accuracy =
-    typed.length > 0 ? Math.round((correctChars / typed.length) * 100) : 100;
-  const errors = typed.length - correctChars;
+  // Memoize stats to avoid expensive recalc every render
+  const stats = useMemo(() => {
+    const elapsed =
+      state === "running" && startTime > 0
+        ? (Date.now() - startTime) / 60000
+        : 0;
+    const correctChars = typed
+      .split("")
+      .filter((c, idx) => c === passage[idx]).length;
+    const wpm = elapsed > 0 ? Math.round(correctChars / 5 / elapsed) : 0;
+    const accuracy =
+      typed.length > 0 ? Math.round((correctChars / typed.length) * 100) : 100;
+    const errors = typed.length - correctChars;
+    return { wpm, accuracy, errors };
+  }, [typed, passage, state, startTime]);
+
   const progress =
     selectedTimeMin > 0
       ? ((selectedTimeMin * 60 - timeLeft) / (selectedTimeMin * 60)) * 100
       : 0;
-
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
@@ -266,6 +360,12 @@ export function TypingTest() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {isLoggedIn && auth?.username && (
+              <div className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded px-3 py-1 text-white text-xs font-mono">
+                <User className="w-3 h-3" />
+                Login ID: <span className="font-bold">{auth.username}</span>
+              </div>
+            )}
             <Badge
               className={`font-mono text-base px-3 py-1 ${
                 timeLeft < 60
@@ -290,23 +390,23 @@ export function TypingTest() {
         <Progress value={progress} className="h-1 rounded-none bg-white/10" />
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        {/* Stats Row */}
+      <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
+        {/* Stats */}
         <div className="grid grid-cols-4 gap-3">
           {[
             {
               label: "WPM",
-              value: state === "running" ? wpm : "—",
-              highlight: wpm >= exam.requiredWPM && state === "running",
+              value: state === "running" ? stats.wpm : "—",
+              highlight: stats.wpm >= exam.requiredWPM && state === "running",
             },
             {
               label: "Accuracy",
-              value: state === "running" ? `${accuracy}%` : "—",
-              highlight: accuracy >= exam.accuracy && state === "running",
+              value: state === "running" ? `${stats.accuracy}%` : "—",
+              highlight: stats.accuracy >= exam.accuracy && state === "running",
             },
             {
               label: "Errors",
-              value: state === "running" ? errors : "—",
+              value: state === "running" ? stats.errors : "—",
               highlight: false,
             },
             {
@@ -324,9 +424,7 @@ export function TypingTest() {
               }`}
             >
               <div
-                className={`font-poppins font-bold text-xl ${
-                  highlight ? "text-green-700" : "text-navy"
-                }`}
+                className={`font-poppins font-bold text-xl ${highlight ? "text-green-700" : "text-navy"}`}
               >
                 {value}
               </div>
@@ -335,14 +433,14 @@ export function TypingTest() {
           ))}
         </div>
 
-        {/* Passage Display */}
+        {/* Passage box — fixed compact height */}
         <div
-          className="bg-white rounded-xl border border-border shadow-card p-6"
+          className="bg-white rounded-xl border border-border shadow-card p-4"
           data-ocid="test.panel"
         >
-          <div className="text-sm text-muted-foreground mb-3 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground mb-2 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span>Passage — type this text below</span>
+              <span className="text-xs font-medium">Passage</span>
               <button
                 type="button"
                 onClick={() => setHighlightEnabled((v) => !v)}
@@ -354,17 +452,15 @@ export function TypingTest() {
                 }`}
               >
                 <Highlighter className="w-3 h-3" />
-                Highlight: {highlightEnabled ? "ON" : "OFF"}
+                {highlightEnabled ? "ON" : "OFF"}
               </button>
             </div>
             <div className="flex items-center gap-3">
-              {/* Font Size Controls */}
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setFontSize((s) => Math.max(12, s - 2))}
                   className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
-                  title="Decrease font size"
                 >
                   A-
                 </button>
@@ -375,7 +471,6 @@ export function TypingTest() {
                   type="button"
                   onClick={() => setFontSize((s) => Math.min(28, s + 2))}
                   className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
-                  title="Increase font size"
                 >
                   A+
                 </button>
@@ -393,8 +488,8 @@ export function TypingTest() {
           />
         </div>
 
-        {/* Typing Textarea */}
-        <div className="bg-white rounded-xl border border-border shadow-card p-6">
+        {/* Textarea */}
+        <div className="bg-white rounded-xl border border-border shadow-card p-4">
           <textarea
             ref={textareaRef}
             value={typed}
@@ -408,7 +503,7 @@ export function TypingTest() {
                   ? "Test complete!"
                   : "Start typing here..."
             }
-            className="w-full h-32 font-mono text-sm resize-none border border-input rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-ring bg-muted/30 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-28 font-mono text-sm resize-none border border-input rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-ring bg-muted/30 disabled:opacity-60 disabled:cursor-not-allowed"
             data-ocid="test.editor"
             autoCorrect="off"
             autoCapitalize="off"
@@ -421,14 +516,39 @@ export function TypingTest() {
           )}
         </div>
 
-        {/* Settings Panel (idle) + Start Button */}
+        {/* Settings (idle only) */}
         {state === "idle" && (
-          <div className="bg-white rounded-xl border border-border shadow-card p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-border shadow-card p-5 space-y-4">
             <h3 className="font-poppins font-semibold text-navy text-sm">
               Test Settings
             </h3>
 
-            {/* Time Presets */}
+            {/* Language selector — show if exam supports multiple languages */}
+            {languageOptions.length > 1 && (
+              <div>
+                <p className="text-xs text-muted-foreground font-medium mb-2">
+                  Language / भाषा
+                </p>
+                <div className="flex gap-2">
+                  {languageOptions.map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => setSelectedLanguage(lang)}
+                      data-ocid="test.toggle"
+                      className={`px-5 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+                        selectedLanguage === lang
+                          ? "bg-navy text-white border-navy"
+                          : "bg-white text-navy border-navy/30 hover:bg-navy/5"
+                      }`}
+                    >
+                      {lang === "Hindi" ? "हिंदी (Hindi)" : "English"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <p className="text-xs text-muted-foreground font-medium mb-2">
                 Time Limit
@@ -451,8 +571,6 @@ export function TypingTest() {
                 ))}
               </div>
             </div>
-
-            {/* Paragraph Length Slider */}
             <div>
               <p className="text-xs text-muted-foreground font-medium mb-2">
                 Paragraph Length:{" "}
@@ -474,8 +592,6 @@ export function TypingTest() {
                 <span>2000</span>
               </div>
             </div>
-
-            {/* Backspace Toggle */}
             <div>
               <p className="text-xs text-muted-foreground font-medium mb-2">
                 Backspace
@@ -495,8 +611,7 @@ export function TypingTest() {
                   : "Backspace: Disabled ✗"}
               </button>
             </div>
-
-            <div className="pt-2 text-center">
+            <div className="pt-1 flex flex-wrap items-center justify-center gap-4">
               <Button
                 size="lg"
                 onClick={startTest}
@@ -505,24 +620,34 @@ export function TypingTest() {
               >
                 <Play className="w-5 h-5 mr-2" /> Start Test
               </Button>
-              <p className="text-xs text-muted-foreground mt-3">
-                Timer begins when you click Start. You have {selectedTimeMin}{" "}
-                {selectedTimeMin === 1 ? "minute" : "minutes"}.
-              </p>
+              <Link to="/live">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-red-300 text-red-600 hover:bg-red-50 font-semibold px-8 rounded-full gap-2"
+                  data-ocid="test.secondary_button"
+                >
+                  <Radio className="w-4 h-4" /> Live Test
+                </Button>
+              </Link>
             </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Timer begins when you click Start. You have {selectedTimeMin}{" "}
+              {selectedTimeMin === 1 ? "minute" : "minutes"}.
+            </p>
           </div>
         )}
 
         {state === "running" && (
-          <div className="bg-white rounded-xl border border-border shadow-card p-4">
+          <div className="bg-white rounded-xl border border-border shadow-card p-3">
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span>⏱ Time: {selectedTimeMin} min</span>
-              <span>📝 Words: {paragraphWords}</span>
+              <span>⏱ {selectedTimeMin} min</span>
+              <span>📝 {paragraphWords} words</span>
+              <span>🌐 {selectedLanguage}</span>
               <span>
-                {backspaceAllowed
-                  ? "⌫ Backspace: Allowed"
-                  : "⚡ Backspace: Disabled"}
+                {backspaceAllowed ? "⌫ Backspace: On" : "⚡ Backspace: Off"}
               </span>
+              {isLoggedIn && <span>💾 Auto-saving</span>}
             </div>
           </div>
         )}

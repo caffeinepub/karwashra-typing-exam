@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   Award,
+  BookOpen,
   CheckCircle,
   ChevronRight,
   Clock,
@@ -122,6 +123,42 @@ export function Home() {
                 </Button>
               </Link>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Learn Typing Banner */}
+      <section className="py-10 bg-gradient-to-r from-emerald-700 to-teal-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center shrink-0">
+                <BookOpen className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-poppins font-bold text-white">
+                  New to Typing? Start Learning!
+                </h2>
+                <p className="text-white/80 text-sm mt-0.5 max-w-lg">
+                  Practice from basic letters to full sentences with structured
+                  Learn Typing lessons. Hindi & English both supported.
+                </p>
+              </div>
+            </div>
+            <Link to="/learn" className="shrink-0">
+              <Button
+                size="lg"
+                className="bg-white text-emerald-700 hover:bg-white/90 font-bold px-8 rounded-full shadow-lg whitespace-nowrap"
+                data-ocid="home.learn_button"
+              >
+                Start Learning Free <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </section>

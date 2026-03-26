@@ -89,17 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface TypingResult {
-    wpm: bigint;
-    user: Principal;
-    errors: bigint;
-    timestamp: Time;
-    examId: string;
-    sessionId: string;
-    timeTaken: bigint;
-    passed: boolean;
-    accuracy: bigint;
-}
 export type Time = bigint;
 export interface Passage {
     id: string;
@@ -119,37 +108,163 @@ export interface Exam {
     authority: string;
     officialWebsite: string;
 }
+export interface TypingResult {
+    wpm: bigint;
+    username: string;
+    errors: bigint;
+    language: string;
+    timestamp: Time;
+    examId: string;
+    sessionId: string;
+    timeTaken: bigint;
+    examName: string;
+    passed: boolean;
+    accuracy: bigint;
+}
+export interface CallerUserProfile {
+    name: string;
+}
+export interface UserProfile {
+    username: string;
+    createdAt: Time;
+    securityQuestion: string;
+    securityAnswer: string;
+    passwordHash: string;
+}
+export interface LiveSessionPublic {
+    startTime: Time;
+    participants: Array<TypingResult>;
+    timeLimit: bigint;
+    isActive: boolean;
+    examId: string;
+    roomId: string;
+    examName: string;
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
 export enum Variant_hindi_bilingual_english {
     hindi = "hindi",
     bilingual = "bilingual",
     english = "english"
 }
 export interface backendInterface {
+    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    createLiveSession(token: string, examId: string, examName: string, timeLimit: bigint): Promise<string>;
+    finishLiveSession(token: string, roomId: string, username: string, wpm: bigint, accuracy: bigint, errors: bigint, timeTaken: bigint): Promise<void>;
+    getActiveLiveSessions(): Promise<Array<LiveSessionPublic>>;
     getAllExams(): Promise<Array<Exam>>;
     getAllPassages(): Promise<Array<Passage>>;
+    getCallerUserProfile(): Promise<CallerUserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getCurrentUserProfile(token: string): Promise<UserProfile>;
     getExam(examId: string): Promise<Exam>;
     getExamResults(examId: string): Promise<Array<TypingResult>>;
-    getMyResults(): Promise<Array<TypingResult>>;
+    getLeaderboard(): Promise<Array<TypingResult>>;
+    getLiveSessionState(roomId: string): Promise<LiveSessionPublic>;
+    getMyResults(token: string): Promise<Array<TypingResult>>;
     getPassage(passageId: string): Promise<Passage>;
     getPassagesByCategory(category: string): Promise<Array<Passage>>;
     getSessionResult(sessionId: string): Promise<TypingResult>;
-    submitResult(sessionId: string, examId: string, wpm: bigint, accuracy: bigint, errors: bigint, timeTaken: bigint, passed: boolean): Promise<void>;
+    getUserProfile(user: Principal): Promise<CallerUserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    joinLiveSession(token: string, roomId: string, username: string): Promise<boolean>;
+    login(username: string, passwordHash: string): Promise<string>;
+    registerUser(username: string, passwordHash: string, securityQuestion: string, securityAnswer: string): Promise<boolean>;
+    resetPassword(username: string, securityAnswer: string, newPasswordHash: string): Promise<boolean>;
+    saveCallerUserProfile(profile: CallerUserProfile): Promise<void>;
+    submitResult(token: string, sessionId: string, examId: string, examName: string, wpm: bigint, accuracy: bigint, errors: bigint, timeTaken: bigint, passed: boolean, language: string): Promise<void>;
+    updateProgress(token: string, roomId: string, username: string, wpm: bigint, accuracy: bigint, wordsTyped: bigint): Promise<void>;
+    verifySession(token: string): Promise<boolean>;
 }
-import type { Exam as _Exam } from "./declarations/backend.did.d.ts";
+import type { CallerUserProfile as _CallerUserProfile, Exam as _Exam, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor._initializeAccessControlWithSecret(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor._initializeAccessControlWithSecret(arg0);
+            return result;
+        }
+    }
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async createLiveSession(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createLiveSession(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createLiveSession(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async finishLiveSession(arg0: string, arg1: string, arg2: string, arg3: bigint, arg4: bigint, arg5: bigint, arg6: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.finishLiveSession(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.finishLiveSession(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return result;
+        }
+    }
+    async getActiveLiveSessions(): Promise<Array<LiveSessionPublic>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getActiveLiveSessions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getActiveLiveSessions();
+            return result;
+        }
+    }
     async getAllExams(): Promise<Array<Exam>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllExams();
-                return from_candid_vec_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllExams();
-            return from_candid_vec_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllPassages(): Promise<Array<Passage>> {
@@ -166,18 +281,60 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getCallerUserProfile(): Promise<CallerUserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCallerUserRole(): Promise<UserRole> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserRole();
+                return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserRole();
+            return from_candid_UserRole_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCurrentUserProfile(arg0: string): Promise<UserProfile> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCurrentUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCurrentUserProfile(arg0);
+            return result;
+        }
+    }
     async getExam(arg0: string): Promise<Exam> {
         if (this.processError) {
             try {
                 const result = await this.actor.getExam(arg0);
-                return from_candid_Exam_n2(this._uploadFile, this._downloadFile, result);
+                return from_candid_Exam_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getExam(arg0);
-            return from_candid_Exam_n2(this._uploadFile, this._downloadFile, result);
+            return from_candid_Exam_n4(this._uploadFile, this._downloadFile, result);
         }
     }
     async getExamResults(arg0: string): Promise<Array<TypingResult>> {
@@ -194,17 +351,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getMyResults(): Promise<Array<TypingResult>> {
+    async getLeaderboard(): Promise<Array<TypingResult>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getMyResults();
+                const result = await this.actor.getLeaderboard();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getMyResults();
+            const result = await this.actor.getLeaderboard();
+            return result;
+        }
+    }
+    async getLiveSessionState(arg0: string): Promise<LiveSessionPublic> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveSessionState(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveSessionState(arg0);
+            return result;
+        }
+    }
+    async getMyResults(arg0: string): Promise<Array<TypingResult>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyResults(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyResults(arg0);
             return result;
         }
     }
@@ -250,25 +435,157 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async submitResult(arg0: string, arg1: string, arg2: bigint, arg3: bigint, arg4: bigint, arg5: bigint, arg6: boolean): Promise<void> {
+    async getUserProfile(arg0: Principal): Promise<CallerUserProfile | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.submitResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isCallerAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isCallerAdmin();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.submitResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async joinLiveSession(arg0: string, arg1: string, arg2: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.joinLiveSession(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.joinLiveSession(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async login(arg0: string, arg1: string): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.login(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.login(arg0, arg1);
+            return result;
+        }
+    }
+    async registerUser(arg0: string, arg1: string, arg2: string, arg3: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerUser(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerUser(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async resetPassword(arg0: string, arg1: string, arg2: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.resetPassword(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.resetPassword(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: CallerUserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async submitResult(arg0: string, arg1: string, arg2: string, arg3: string, arg4: bigint, arg5: bigint, arg6: bigint, arg7: bigint, arg8: boolean, arg9: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+            return result;
+        }
+    }
+    async updateProgress(arg0: string, arg1: string, arg2: string, arg3: bigint, arg4: bigint, arg5: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateProgress(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateProgress(arg0, arg1, arg2, arg3, arg4, arg5);
+            return result;
+        }
+    }
+    async verifySession(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifySession(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifySession(arg0);
             return result;
         }
     }
 }
-function from_candid_Exam_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Exam): Exam {
-    return from_candid_record_n3(_uploadFile, _downloadFile, value);
+function from_candid_Exam_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Exam): Exam {
+    return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n9(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_CallerUserProfile]): CallerUserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     minAccuracy: bigint;
     name: string;
     description: string;
@@ -299,7 +616,7 @@ function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint
         minAccuracy: value.minAccuracy,
         name: value.name,
         description: value.description,
-        language: from_candid_variant_n4(_uploadFile, _downloadFile, value.language),
+        language: from_candid_variant_n6(_uploadFile, _downloadFile, value.language),
         requiredWPM: value.requiredWPM,
         timeLimitMinutes: value.timeLimitMinutes,
         category: value.category,
@@ -307,7 +624,7 @@ function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint
         officialWebsite: value.officialWebsite
     };
 }
-function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     hindi: null;
 } | {
     bilingual: null;
@@ -316,8 +633,35 @@ function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): Variant_hindi_bilingual_english {
     return "hindi" in value ? Variant_hindi_bilingual_english.hindi : "bilingual" in value ? Variant_hindi_bilingual_english.bilingual : "english" in value ? Variant_hindi_bilingual_english.english : value;
 }
-function from_candid_vec_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Exam>): Array<Exam> {
-    return value.map((x)=>from_candid_Exam_n2(_uploadFile, _downloadFile, x));
+function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_vec_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Exam>): Array<Exam> {
+    return value.map((x)=>from_candid_Exam_n4(_uploadFile, _downloadFile, x));
+}
+function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
 }
 export interface CreateActorOptions {
     agent?: Agent;

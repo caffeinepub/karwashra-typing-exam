@@ -10,6 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface CallerUserProfile { 'name' : string }
 export interface Exam {
   'minAccuracy' : bigint,
   'name' : string,
@@ -23,6 +24,15 @@ export interface Exam {
   'authority' : string,
   'officialWebsite' : string,
 }
+export interface LiveSessionPublic {
+  'startTime' : Time,
+  'participants' : Array<TypingResult>,
+  'timeLimit' : bigint,
+  'isActive' : boolean,
+  'examId' : string,
+  'roomId' : string,
+  'examName' : string,
+}
 export interface Passage {
   'id' : string,
   'content' : string,
@@ -33,28 +43,76 @@ export interface Passage {
 export type Time = bigint;
 export interface TypingResult {
   'wpm' : bigint,
-  'user' : Principal,
+  'username' : string,
   'errors' : bigint,
+  'language' : string,
   'timestamp' : Time,
   'examId' : string,
   'sessionId' : string,
   'timeTaken' : bigint,
+  'examName' : string,
   'passed' : boolean,
   'accuracy' : bigint,
 }
+export interface UserProfile {
+  'username' : string,
+  'createdAt' : Time,
+  'securityQuestion' : string,
+  'securityAnswer' : string,
+  'passwordHash' : string,
+}
+export type UserRole = { 'admin' : null } |
+  { 'user' : null } |
+  { 'guest' : null };
 export interface _SERVICE {
+  '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'createLiveSession' : ActorMethod<[string, string, string, bigint], string>,
+  'finishLiveSession' : ActorMethod<
+    [string, string, string, bigint, bigint, bigint, bigint],
+    undefined
+  >,
+  'getActiveLiveSessions' : ActorMethod<[], Array<LiveSessionPublic>>,
   'getAllExams' : ActorMethod<[], Array<Exam>>,
   'getAllPassages' : ActorMethod<[], Array<Passage>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [CallerUserProfile]>,
+  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCurrentUserProfile' : ActorMethod<[string], UserProfile>,
   'getExam' : ActorMethod<[string], Exam>,
   'getExamResults' : ActorMethod<[string], Array<TypingResult>>,
-  'getMyResults' : ActorMethod<[], Array<TypingResult>>,
+  'getLeaderboard' : ActorMethod<[], Array<TypingResult>>,
+  'getLiveSessionState' : ActorMethod<[string], LiveSessionPublic>,
+  'getMyResults' : ActorMethod<[string], Array<TypingResult>>,
   'getPassage' : ActorMethod<[string], Passage>,
   'getPassagesByCategory' : ActorMethod<[string], Array<Passage>>,
   'getSessionResult' : ActorMethod<[string], TypingResult>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [CallerUserProfile]>,
+  'isCallerAdmin' : ActorMethod<[], boolean>,
+  'joinLiveSession' : ActorMethod<[string, string, string], boolean>,
+  'login' : ActorMethod<[string, string], string>,
+  'registerUser' : ActorMethod<[string, string, string, string], boolean>,
+  'resetPassword' : ActorMethod<[string, string, string], boolean>,
+  'saveCallerUserProfile' : ActorMethod<[CallerUserProfile], undefined>,
   'submitResult' : ActorMethod<
-    [string, string, bigint, bigint, bigint, bigint, boolean],
+    [
+      string,
+      string,
+      string,
+      string,
+      bigint,
+      bigint,
+      bigint,
+      bigint,
+      boolean,
+      string,
+    ],
     undefined
   >,
+  'updateProgress' : ActorMethod<
+    [string, string, string, bigint, bigint, bigint],
+    undefined
+  >,
+  'verifySession' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

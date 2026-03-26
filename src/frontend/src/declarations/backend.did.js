@@ -8,6 +8,34 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const Time = IDL.Int;
+export const TypingResult = IDL.Record({
+  'wpm' : IDL.Nat,
+  'username' : IDL.Text,
+  'errors' : IDL.Nat,
+  'language' : IDL.Text,
+  'timestamp' : Time,
+  'examId' : IDL.Text,
+  'sessionId' : IDL.Text,
+  'timeTaken' : IDL.Nat,
+  'examName' : IDL.Text,
+  'passed' : IDL.Bool,
+  'accuracy' : IDL.Nat,
+});
+export const LiveSessionPublic = IDL.Record({
+  'startTime' : Time,
+  'participants' : IDL.Vec(TypingResult),
+  'timeLimit' : IDL.Nat,
+  'isActive' : IDL.Bool,
+  'examId' : IDL.Text,
+  'roomId' : IDL.Text,
+  'examName' : IDL.Text,
+});
 export const Exam = IDL.Record({
   'minAccuracy' : IDL.Nat,
   'name' : IDL.Text,
@@ -30,38 +58,120 @@ export const Passage = IDL.Record({
   'difficulty' : IDL.Nat,
   'category' : IDL.Text,
 });
-export const Time = IDL.Int;
-export const TypingResult = IDL.Record({
-  'wpm' : IDL.Nat,
-  'user' : IDL.Principal,
-  'errors' : IDL.Nat,
-  'timestamp' : Time,
-  'examId' : IDL.Text,
-  'sessionId' : IDL.Text,
-  'timeTaken' : IDL.Nat,
-  'passed' : IDL.Bool,
-  'accuracy' : IDL.Nat,
+export const CallerUserProfile = IDL.Record({ 'name' : IDL.Text });
+export const UserProfile = IDL.Record({
+  'username' : IDL.Text,
+  'createdAt' : Time,
+  'securityQuestion' : IDL.Text,
+  'securityAnswer' : IDL.Text,
+  'passwordHash' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
-  'getAllExams' : IDL.Func([], [IDL.Vec(Exam)], ['query']),
-  'getAllPassages' : IDL.Func([], [IDL.Vec(Passage)], ['query']),
-  'getExam' : IDL.Func([IDL.Text], [Exam], ['query']),
-  'getExamResults' : IDL.Func([IDL.Text], [IDL.Vec(TypingResult)], ['query']),
-  'getMyResults' : IDL.Func([], [IDL.Vec(TypingResult)], ['query']),
-  'getPassage' : IDL.Func([IDL.Text], [Passage], ['query']),
-  'getPassagesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Passage)], ['query']),
-  'getSessionResult' : IDL.Func([IDL.Text], [TypingResult], ['query']),
-  'submitResult' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Bool],
+  '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'createLiveSession' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+      [IDL.Text],
+      [],
+    ),
+  'finishLiveSession' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat],
       [],
       [],
     ),
+  'getActiveLiveSessions' : IDL.Func(
+      [],
+      [IDL.Vec(LiveSessionPublic)],
+      ['query'],
+    ),
+  'getAllExams' : IDL.Func([], [IDL.Vec(Exam)], ['query']),
+  'getAllPassages' : IDL.Func([], [IDL.Vec(Passage)], ['query']),
+  'getCallerUserProfile' : IDL.Func(
+      [],
+      [IDL.Opt(CallerUserProfile)],
+      ['query'],
+    ),
+  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCurrentUserProfile' : IDL.Func([IDL.Text], [UserProfile], ['query']),
+  'getExam' : IDL.Func([IDL.Text], [Exam], ['query']),
+  'getExamResults' : IDL.Func([IDL.Text], [IDL.Vec(TypingResult)], ['query']),
+  'getLeaderboard' : IDL.Func([], [IDL.Vec(TypingResult)], ['query']),
+  'getLiveSessionState' : IDL.Func([IDL.Text], [LiveSessionPublic], ['query']),
+  'getMyResults' : IDL.Func([IDL.Text], [IDL.Vec(TypingResult)], ['query']),
+  'getPassage' : IDL.Func([IDL.Text], [Passage], ['query']),
+  'getPassagesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Passage)], ['query']),
+  'getSessionResult' : IDL.Func([IDL.Text], [TypingResult], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(CallerUserProfile)],
+      ['query'],
+    ),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'joinLiveSession' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Bool], []),
+  'login' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+  'registerUser' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Bool],
+      [],
+    ),
+  'resetPassword' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Bool], []),
+  'saveCallerUserProfile' : IDL.Func([CallerUserProfile], [], []),
+  'submitResult' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Bool,
+        IDL.Text,
+      ],
+      [],
+      [],
+    ),
+  'updateProgress' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
+      [],
+      [],
+    ),
+  'verifySession' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const Time = IDL.Int;
+  const TypingResult = IDL.Record({
+    'wpm' : IDL.Nat,
+    'username' : IDL.Text,
+    'errors' : IDL.Nat,
+    'language' : IDL.Text,
+    'timestamp' : Time,
+    'examId' : IDL.Text,
+    'sessionId' : IDL.Text,
+    'timeTaken' : IDL.Nat,
+    'examName' : IDL.Text,
+    'passed' : IDL.Bool,
+    'accuracy' : IDL.Nat,
+  });
+  const LiveSessionPublic = IDL.Record({
+    'startTime' : Time,
+    'participants' : IDL.Vec(TypingResult),
+    'timeLimit' : IDL.Nat,
+    'isActive' : IDL.Bool,
+    'examId' : IDL.Text,
+    'roomId' : IDL.Text,
+    'examName' : IDL.Text,
+  });
   const Exam = IDL.Record({
     'minAccuracy' : IDL.Nat,
     'name' : IDL.Text,
@@ -84,25 +194,51 @@ export const idlFactory = ({ IDL }) => {
     'difficulty' : IDL.Nat,
     'category' : IDL.Text,
   });
-  const Time = IDL.Int;
-  const TypingResult = IDL.Record({
-    'wpm' : IDL.Nat,
-    'user' : IDL.Principal,
-    'errors' : IDL.Nat,
-    'timestamp' : Time,
-    'examId' : IDL.Text,
-    'sessionId' : IDL.Text,
-    'timeTaken' : IDL.Nat,
-    'passed' : IDL.Bool,
-    'accuracy' : IDL.Nat,
+  const CallerUserProfile = IDL.Record({ 'name' : IDL.Text });
+  const UserProfile = IDL.Record({
+    'username' : IDL.Text,
+    'createdAt' : Time,
+    'securityQuestion' : IDL.Text,
+    'securityAnswer' : IDL.Text,
+    'passwordHash' : IDL.Text,
   });
   
   return IDL.Service({
+    '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'createLiveSession' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Text],
+        [],
+      ),
+    'finishLiveSession' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+        [],
+      ),
+    'getActiveLiveSessions' : IDL.Func(
+        [],
+        [IDL.Vec(LiveSessionPublic)],
+        ['query'],
+      ),
     'getAllExams' : IDL.Func([], [IDL.Vec(Exam)], ['query']),
     'getAllPassages' : IDL.Func([], [IDL.Vec(Passage)], ['query']),
+    'getCallerUserProfile' : IDL.Func(
+        [],
+        [IDL.Opt(CallerUserProfile)],
+        ['query'],
+      ),
+    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCurrentUserProfile' : IDL.Func([IDL.Text], [UserProfile], ['query']),
     'getExam' : IDL.Func([IDL.Text], [Exam], ['query']),
     'getExamResults' : IDL.Func([IDL.Text], [IDL.Vec(TypingResult)], ['query']),
-    'getMyResults' : IDL.Func([], [IDL.Vec(TypingResult)], ['query']),
+    'getLeaderboard' : IDL.Func([], [IDL.Vec(TypingResult)], ['query']),
+    'getLiveSessionState' : IDL.Func(
+        [IDL.Text],
+        [LiveSessionPublic],
+        ['query'],
+      ),
+    'getMyResults' : IDL.Func([IDL.Text], [IDL.Vec(TypingResult)], ['query']),
     'getPassage' : IDL.Func([IDL.Text], [Passage], ['query']),
     'getPassagesByCategory' : IDL.Func(
         [IDL.Text],
@@ -110,11 +246,47 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getSessionResult' : IDL.Func([IDL.Text], [TypingResult], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(CallerUserProfile)],
+        ['query'],
+      ),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'joinLiveSession' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Bool],
+        [],
+      ),
+    'login' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
+    'registerUser' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Bool],
+        [],
+      ),
+    'resetPassword' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Bool], []),
+    'saveCallerUserProfile' : IDL.Func([CallerUserProfile], [], []),
     'submitResult' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Nat, IDL.Bool],
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Bool,
+          IDL.Text,
+        ],
         [],
         [],
       ),
+    'updateProgress' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+        [],
+      ),
+    'verifySession' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
 };
 

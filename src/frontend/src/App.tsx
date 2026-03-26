@@ -2,10 +2,17 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Toaster } from "@/components/ui/sonner";
 import { About } from "@/pages/About";
+import { Dashboard } from "@/pages/Dashboard";
 import { ExamCategories } from "@/pages/ExamCategories";
 import { ExamRules } from "@/pages/ExamRules";
+import { ForgotPassword } from "@/pages/ForgotPassword";
 import { Home } from "@/pages/Home";
+import { LearnTyping } from "@/pages/LearnTyping";
+import { LiveHub } from "@/pages/LiveHub";
+import { LiveTestRoom } from "@/pages/LiveTestRoom";
+import { Login } from "@/pages/Login";
 import { Results } from "@/pages/Results";
+import { Signup } from "@/pages/Signup";
 import { TypingTest } from "@/pages/TypingTest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -35,6 +42,11 @@ const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
   component: Home,
+});
+const learnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/learn",
+  component: LearnTyping,
 });
 const examsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -69,14 +81,51 @@ const aboutRoute = createRoute({
   path: "/about",
   component: About,
 });
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/login",
+  component: Login,
+});
+const signupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/signup",
+  component: Signup,
+});
+const forgotRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/forgot-password",
+  component: ForgotPassword,
+});
+const dashboardRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/dashboard",
+  component: Dashboard,
+});
+const liveHubRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/live",
+  component: LiveHub,
+});
+const liveRoomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/live/$roomId",
+  component: LiveTestRoom,
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
+  learnRoute,
   examsRoute,
   rulesRoute,
   testRoute,
   resultRoute,
   aboutRoute,
+  loginRoute,
+  signupRoute,
+  forgotRoute,
+  dashboardRoute,
+  liveHubRoute,
+  liveRoomRoute,
 ]);
 
 const router = createRouter({ routeTree });
