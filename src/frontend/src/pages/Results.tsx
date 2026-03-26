@@ -21,6 +21,8 @@ export function Results() {
     accuracy?: string;
     errors?: string;
     timeTaken?: string;
+    correctWords?: string;
+    wrongWords?: string;
   };
 
   const exam = EXAMS.find((e) => e.id === id);
@@ -28,6 +30,8 @@ export function Results() {
   const accuracy = Number(search.accuracy ?? 0);
   const errors = Number(search.errors ?? 0);
   const timeTaken = Number(search.timeTaken ?? 0);
+  const correctWords = Number(search.correctWords ?? 0);
+  const wrongWords = Number(search.wrongWords ?? 0);
 
   const wpmPassed = exam ? wpm >= exam.requiredWPM : false;
   const accuracyPassed = exam ? accuracy >= exam.accuracy : false;
@@ -192,6 +196,38 @@ export function Results() {
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               of {exam.timeMin}m total
+            </div>
+          </div>
+
+          {/* Correct Words */}
+          <div className="bg-white rounded-xl border border-green-200 p-5 shadow-card">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="font-semibold text-navy text-sm">
+                Correct Words
+              </span>
+            </div>
+            <div className="text-3xl font-poppins font-bold text-green-600">
+              {correctWords}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Words typed correctly
+            </div>
+          </div>
+
+          {/* Wrong Words */}
+          <div className="bg-white rounded-xl border border-red-200 p-5 shadow-card">
+            <div className="flex items-center gap-2 mb-2">
+              <XCircle className="w-4 h-4 text-red-400" />
+              <span className="font-semibold text-navy text-sm">
+                Wrong Words
+              </span>
+            </div>
+            <div className="text-3xl font-poppins font-bold text-red-500">
+              {wrongWords}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Words with mistakes
             </div>
           </div>
         </div>

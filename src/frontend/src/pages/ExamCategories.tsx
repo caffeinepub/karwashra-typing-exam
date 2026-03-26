@@ -128,9 +128,22 @@ export function ExamCategories() {
                     {exam.language}
                   </span>
                 </div>
-                <h3 className="font-poppins font-bold text-navy text-lg mb-1">
-                  {exam.name}
-                </h3>
+
+                {/* Exam Name with Logo */}
+                <div className="flex items-center gap-2 mb-1">
+                  <img
+                    src={exam.logoUrl}
+                    alt={`${exam.name} logo`}
+                    className="w-7 h-7 rounded object-contain bg-white p-0.5 border border-border flex-shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <h3 className="font-poppins font-bold text-navy text-lg leading-tight">
+                    {exam.name}
+                  </h3>
+                </div>
+
                 <p className="text-xs text-muted-foreground mb-1">
                   {exam.authority}
                 </p>

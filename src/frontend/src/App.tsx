@@ -60,6 +60,8 @@ const resultRoute = createRoute({
     accuracy: search.accuracy as string | undefined,
     errors: search.errors as string | undefined,
     timeTaken: search.timeTaken as string | undefined,
+    correctWords: search.correctWords as string | undefined,
+    wrongWords: search.wrongWords as string | undefined,
   }),
 });
 const aboutRoute = createRoute({

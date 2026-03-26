@@ -1,24 +1,31 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EXAMS, getRandomPassage } from "@/data/exams";
+import { Slider } from "@/components/ui/slider";
+import { EXAMS, generatePassageOfLength } from "@/data/exams";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Highlighter, Play, RotateCcw, Timer } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type TestState = "idle" | "running" | "finished";
 
+const TIME_PRESETS = [1, 2, 5, 10, 15, 20];
+
 function PassageDisplay({
   passage,
   typed,
   highlightEnabled,
-}: { passage: string; typed: string; highlightEnabled: boolean }) {
-  // Split passage into word segments (words + spaces)
+  fontSize,
+}: {
+  passage: string;
+  typed: string;
+  highlightEnabled: boolean;
+  fontSize: number;
+}) {
   const segments: { text: string; startIndex: number }[] = [];
   let i = 0;
   while (i < passage.length) {
     const spaceStart = i;
-    // collect spaces
     while (i < passage.length && passage[i] === " ") i++;
     if (i > spaceStart) {
       segments.push({
@@ -26,7 +33,6 @@ function PassageDisplay({
         startIndex: spaceStart,
       });
     }
-    // collect word chars
     const wordStart = i;
     while (i < passage.length && passage[i] !== " ") i++;
     if (i > wordStart) {
@@ -40,7 +46,10 @@ function PassageDisplay({
   const cursorPos = typed.length;
 
   return (
-    <div className="font-mono text-base leading-loose select-none">
+    <div
+      className="font-mono leading-loose select-none"
+      style={{ fontSize: `${fontSize}px` }}
+    >
       {segments.map((seg) => {
         const isCurrentWord =
           highlightEnabled &&
@@ -93,6 +102,10 @@ export function TypingTest() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
   const [highlightEnabled, setHighlightEnabled] = useState(true);
+  const [backspaceAllowed, setBackspaceAllowed] = useState(true);
+  const [selectedTimeMin, setSelectedTimeMin] = useState(exam?.timeMin ?? 10);
+  const [paragraphWords, setParagraphWords] = useState(400);
+  const [fontSize, setFontSize] = useState(16);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -100,12 +113,12 @@ export function TypingTest() {
   const resetTest = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (exam) {
-      setPassage(getRandomPassage(exam));
-      setTimeLeft(exam.timeMin * 60);
+      setPassage(generatePassageOfLength(exam, paragraphWords));
+      setTimeLeft(selectedTimeMin * 60);
     }
     setTyped("");
     setState("idle");
-  }, [exam]);
+  }, [exam, paragraphWords, selectedTimeMin]);
 
   useEffect(() => {
     resetTest();
@@ -143,7 +156,20 @@ export function TypingTest() {
       const accuracy =
         totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 0;
       const errors = totalTyped - correctChars;
-      const timeTaken = exam ? exam.timeMin * 60 - timeLeft : 0;
+      const timeTaken = selectedTimeMin * 60 - timeLeft;
+
+      const passageWords = passage.split(" ");
+      const typedWords = finalTyped.split(" ");
+      let correctWords = 0;
+      let wrongWords = 0;
+      passageWords.forEach((word, idx) => {
+        if (typedWords[idx] === word) {
+          correctWords++;
+        } else if (typedWords[idx] !== undefined) {
+          wrongWords++;
+        }
+      });
+
       navigate({
         to: "/exam/$id/result",
         params: { id },
@@ -152,10 +178,12 @@ export function TypingTest() {
           accuracy: String(accuracy),
           errors: String(errors),
           timeTaken: String(timeTaken),
+          correctWords: String(correctWords),
+          wrongWords: String(wrongWords),
         },
       });
     },
-    [startTime, passage, timeLeft, exam, id, navigate],
+    [startTime, passage, timeLeft, selectedTimeMin, id, navigate],
   );
 
   const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -168,6 +196,12 @@ export function TypingTest() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!backspaceAllowed && e.key === "Backspace") {
+      e.preventDefault();
+    }
+  };
+
   const elapsed =
     state === "running" && startTime > 0 ? (Date.now() - startTime) / 60000 : 0;
   const correctChars = typed
@@ -177,9 +211,10 @@ export function TypingTest() {
   const accuracy =
     typed.length > 0 ? Math.round((correctChars / typed.length) * 100) : 100;
   const errors = typed.length - correctChars;
-  const progress = exam
-    ? ((exam.timeMin * 60 - timeLeft) / (exam.timeMin * 60)) * 100
-    : 0;
+  const progress =
+    selectedTimeMin > 0
+      ? ((selectedTimeMin * 60 - timeLeft) / (selectedTimeMin * 60)) * 100
+      : 0;
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -211,16 +246,32 @@ export function TypingTest() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div>
-              <div className="text-white font-poppins font-bold text-sm">
-                {exam.name} — Typing Test
+            <div className="flex items-center gap-2">
+              {exam.logoUrl && (
+                <img
+                  src={exam.logoUrl}
+                  alt={`${exam.name} logo`}
+                  className="w-7 h-7 rounded object-contain bg-white p-0.5"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              )}
+              <div>
+                <div className="text-white font-poppins font-bold text-sm">
+                  {exam.name} — Typing Test
+                </div>
+                <div className="text-white/55 text-xs">{exam.authority}</div>
               </div>
-              <div className="text-white/55 text-xs">{exam.authority}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge
-              className={`font-mono text-base px-3 py-1 ${timeLeft < 60 ? "bg-red-500 text-white" : "bg-blue-brand/30 text-white"}`}
+              className={`font-mono text-base px-3 py-1 ${
+                timeLeft < 60
+                  ? "bg-red-500 text-white"
+                  : "bg-blue-brand/30 text-white"
+              }`}
             >
               <Timer className="w-3.5 h-3.5 mr-1.5" />
               {timeStr}
@@ -240,6 +291,7 @@ export function TypingTest() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        {/* Stats Row */}
         <div className="grid grid-cols-4 gap-3">
           {[
             {
@@ -265,10 +317,16 @@ export function TypingTest() {
           ].map(({ label, value, highlight }) => (
             <div
               key={label}
-              className={`rounded-xl p-3 text-center shadow-card border ${highlight ? "bg-green-50 border-green-200" : "bg-white border-border"}`}
+              className={`rounded-xl p-3 text-center shadow-card border ${
+                highlight
+                  ? "bg-green-50 border-green-200"
+                  : "bg-white border-border"
+              }`}
             >
               <div
-                className={`font-poppins font-bold text-xl ${highlight ? "text-green-700" : "text-navy"}`}
+                className={`font-poppins font-bold text-xl ${
+                  highlight ? "text-green-700" : "text-navy"
+                }`}
               >
                 {value}
               </div>
@@ -277,6 +335,7 @@ export function TypingTest() {
           ))}
         </div>
 
+        {/* Passage Display */}
         <div
           className="bg-white rounded-xl border border-border shadow-card p-6"
           data-ocid="test.panel"
@@ -298,22 +357,49 @@ export function TypingTest() {
                 Highlight: {highlightEnabled ? "ON" : "OFF"}
               </button>
             </div>
-            <span className="font-mono text-xs">
-              {typed.length} / {passage.length}
-            </span>
+            <div className="flex items-center gap-3">
+              {/* Font Size Controls */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setFontSize((s) => Math.max(12, s - 2))}
+                  className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
+                  title="Decrease font size"
+                >
+                  A-
+                </button>
+                <span className="text-xs text-muted-foreground w-8 text-center">
+                  {fontSize}px
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFontSize((s) => Math.min(28, s + 2))}
+                  className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
+                  title="Increase font size"
+                >
+                  A+
+                </button>
+              </div>
+              <span className="font-mono text-xs">
+                {typed.length} / {passage.length}
+              </span>
+            </div>
           </div>
           <PassageDisplay
             passage={passage}
             typed={typed}
             highlightEnabled={highlightEnabled}
+            fontSize={fontSize}
           />
         </div>
 
+        {/* Typing Textarea */}
         <div className="bg-white rounded-xl border border-border shadow-card p-6">
           <textarea
             ref={textareaRef}
             value={typed}
             onChange={handleTyping}
+            onKeyDown={handleKeyDown}
             disabled={state !== "running"}
             placeholder={
               state === "idle"
@@ -328,22 +414,116 @@ export function TypingTest() {
             autoCapitalize="off"
             spellCheck={false}
           />
+          {!backspaceAllowed && state === "running" && (
+            <p className="text-xs text-red-500 mt-1">
+              ⚠ Backspace is disabled for this test
+            </p>
+          )}
         </div>
 
+        {/* Settings Panel (idle) + Start Button */}
         {state === "idle" && (
-          <div className="text-center">
-            <Button
-              size="lg"
-              onClick={startTest}
-              className="bg-blue-brand hover:bg-blue-brand-light text-white font-semibold px-10 rounded-full shadow-lg"
-              data-ocid="test.primary_button"
-            >
-              <Play className="w-5 h-5 mr-2" /> Start Test
-            </Button>
-            <p className="text-xs text-muted-foreground mt-3">
-              Timer begins when you click Start. You have {exam.timeMin}{" "}
-              minutes.
-            </p>
+          <div className="bg-white rounded-xl border border-border shadow-card p-6 space-y-5">
+            <h3 className="font-poppins font-semibold text-navy text-sm">
+              Test Settings
+            </h3>
+
+            {/* Time Presets */}
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-2">
+                Time Limit
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {TIME_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setSelectedTimeMin(t)}
+                    data-ocid="test.toggle"
+                    className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+                      selectedTimeMin === t
+                        ? "bg-navy text-white border-navy"
+                        : "bg-white text-navy border-navy/30 hover:bg-navy/5"
+                    }`}
+                  >
+                    {t} min
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Paragraph Length Slider */}
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-2">
+                Paragraph Length:{" "}
+                <span className="text-navy font-bold">
+                  {paragraphWords} words
+                </span>
+              </p>
+              <Slider
+                min={250}
+                max={2000}
+                step={50}
+                value={[paragraphWords]}
+                onValueChange={([val]) => setParagraphWords(val)}
+                className="w-full"
+                data-ocid="test.toggle"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>250</span>
+                <span>2000</span>
+              </div>
+            </div>
+
+            {/* Backspace Toggle */}
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-2">
+                Backspace
+              </p>
+              <button
+                type="button"
+                onClick={() => setBackspaceAllowed((v) => !v)}
+                data-ocid="test.toggle"
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+                  backspaceAllowed
+                    ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
+                    : "bg-red-50 text-red-700 border-red-300 hover:bg-red-100"
+                }`}
+              >
+                {backspaceAllowed
+                  ? "Backspace: Allowed ✓"
+                  : "Backspace: Disabled ✗"}
+              </button>
+            </div>
+
+            <div className="pt-2 text-center">
+              <Button
+                size="lg"
+                onClick={startTest}
+                className="bg-blue-brand hover:bg-blue-brand-light text-white font-semibold px-10 rounded-full shadow-lg"
+                data-ocid="test.primary_button"
+              >
+                <Play className="w-5 h-5 mr-2" /> Start Test
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Timer begins when you click Start. You have {selectedTimeMin}{" "}
+                {selectedTimeMin === 1 ? "minute" : "minutes"}.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {state === "running" && (
+          <div className="bg-white rounded-xl border border-border shadow-card p-4">
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span>⏱ Time: {selectedTimeMin} min</span>
+              <span>📝 Words: {paragraphWords}</span>
+              <span>
+                {backspaceAllowed
+                  ? "⌫ Backspace: Allowed"
+                  : "⚡ Backspace: Disabled"}
+              </span>
+            </div>
           </div>
         )}
 

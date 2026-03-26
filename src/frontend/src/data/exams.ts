@@ -7,6 +7,7 @@ export interface ExamData {
   language: string;
   accuracy: number;
   officialSite: string;
+  logoUrl: string;
   description: string;
   category: string;
   rules: string[];
@@ -24,23 +25,24 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 35,
     timeMin: 10,
     language: "English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description: "Combined Higher Secondary Level Examination",
     category: "SSC",
     eligibility: "Class 12 pass from a recognized board",
     markingScheme:
-      "1 mark per correct word, deduction for errors beyond 5% threshold",
+      "Net WPM = (Total Words Typed - (Errors × 0.25)) / Time; Qualify if Speed ≥ 35 AND Accuracy ≥ 90%",
     rules: [
       "Typing speed of 35 WPM for English medium posts",
-      "Minimum accuracy of 95% required to qualify",
+      "Minimum accuracy of 90% required to qualify",
       "Test duration is 10 minutes on computer",
-      "No use of backspace after passage begins in some variants",
-      "Passage is provided on screen — candidate must type the same",
-      "Speed is calculated as net words typed (correct) per minute",
+      "Net WPM = (Total Words - (Errors × 0.25)) / Time in minutes",
+      "Skill Test Score = (Net WPM / 35) × 50 + (Accuracy / 100) × 50",
+      "Tier 2 Weightage: Typing Score × 0.4 + Written Score × 0.6",
     ],
     negativeMarking:
-      "No negative marking. Errors count against net speed — each error reduces correct word count.",
+      "Each error reduces net WPM by 0.25 words. Accuracy below 90% leads to disqualification.",
     importantNotes: [
       "Skill test is qualifying in nature — marks not added to final merit",
       "Blind typing is preferred; do not look at keyboard",
@@ -52,26 +54,27 @@ export const EXAMS: ExamData[] = [
     id: "ssc-cgl",
     name: "SSC CGL",
     authority: "Staff Selection Commission",
-    requiredWPM: 35,
+    requiredWPM: 40,
     timeMin: 10,
-    language: "English",
-    accuracy: 95,
+    language: "English/Hindi",
+    accuracy: 90,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description: "Combined Graduate Level Examination",
     category: "SSC",
     eligibility: "Graduate from any recognized university",
     markingScheme:
-      "Net typing speed (gross WPM minus error penalty) must meet 35 WPM threshold",
+      "Net WPM = (Total Words - Error Words) / Minutes; Typing Score = (Net WPM / 40) × 70 + (Accuracy / 100) × 30",
     rules: [
       "Typing test required for posts like Tax Assistant, DEO",
-      "35 WPM minimum for English typing test",
-      "Test is conducted on a standard QWERTY keyboard",
-      "Passage is displayed on screen — candidate types verbatim",
-      "Errors beyond 5% deducted from final speed calculation",
-      "Duration: 10 minutes on computer",
+      "40 WPM minimum for English typing test",
+      "Net WPM = (Total Words - Error Words) / Minutes",
+      "Error Words = Wrong Words + (Missing Words × 1.5)",
+      "Typing Score = (Net WPM / 40) × 70 + (Accuracy / 100) × 30",
+      "Skill Test Weight = 20% of total selection",
     ],
     negativeMarking:
-      "Errors reduce net WPM. Accuracy below 95% may lead to disqualification.",
+      "Error Words (wrong + missing × 1.5) deducted. Accuracy below 90% may lead to disqualification.",
     importantNotes: [
       "Typing test is qualifying — not included in final marks",
       "Some CGL posts have Data Entry speed requirement instead",
@@ -85,20 +88,22 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 50,
     timeMin: 10,
     language: "English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description:
       "Stenographer Grade C — 100 WPM shorthand, 50 WPM transcription",
     category: "SSC",
     eligibility: "12th pass with shorthand proficiency at 100 WPM",
-    markingScheme: "Transcription accuracy and speed both evaluated",
+    markingScheme:
+      "Final Score = (Shorthand Score × 0.6) + (Transcription Score × 0.4); Qualify if Shorthand ≥ 80 AND Typing ≥ 30 AND Accuracy ≥ 90%",
     rules: [
       "Shorthand dictation at 100 WPM for 10 minutes",
       "Transcription on computer — 50 WPM typing required",
       "Transcription time: 50 minutes (English) or 65 minutes (Hindi)",
-      "Errors in shorthand notes and transcription both penalized",
-      "Minimum 95% accuracy in typed transcript required",
-      "Both shorthand and transcription must be qualified",
+      "Shorthand Score = (Dictation Speed / Required Speed) × 50",
+      "Transcription Score = (Transcription WPM / 30) × 50",
+      "Final Score = (Shorthand Score × 0.6) + (Transcription Score × 0.4)",
     ],
     negativeMarking:
       "Errors in transcription reduce score. Below threshold = disqualification.",
@@ -115,18 +120,20 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 40,
     timeMin: 10,
     language: "English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description:
       "Stenographer Grade D — 80 WPM shorthand, 40 WPM transcription",
     category: "SSC",
     eligibility: "12th pass with shorthand proficiency at 80 WPM",
-    markingScheme: "Combined shorthand + transcription evaluation",
+    markingScheme:
+      "Combined shorthand + transcription evaluation; Qualify if Shorthand ≥ 80 AND Typing ≥ 30 AND Accuracy ≥ 90%",
     rules: [
       "Shorthand dictation at 80 WPM for 10 minutes",
       "Transcription on computer — 40 WPM typing required",
       "Transcription time: 50 minutes (English)",
-      "Accuracy of 95% in transcription mandatory",
+      "Accuracy of 90% in transcription mandatory",
       "Test conducted at designated SSC centers",
       "Passage is official government correspondence style",
     ],
@@ -145,21 +152,22 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 30,
     timeMin: 10,
     language: "English/Hindi",
-    accuracy: 95,
+    accuracy: 85,
     officialSite: "https://www.rrbcdg.gov.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=rrbcdg.gov.in&sz=64",
     description:
       "Non-Technical Popular Categories — 30 WPM English or 25 WPM Hindi",
     category: "Railway",
     eligibility: "Graduate for Level 6 posts; 12th pass for Level 2-5 posts",
     markingScheme:
-      "Net WPM calculated; both English and Hindi options available",
+      "Net WPM = (Total Characters / 5 - Error Characters / 5) / Minutes; Skill Test Score = (Net WPM / 30) × 60 + (Accuracy / 100) × 40",
     rules: [
       "Typing speed: 30 WPM in English or 25 WPM in Hindi",
-      "Computer-based typing test for Junior Clerk, Accounts Clerk, etc.",
-      "Bilingual passage — candidate chooses language at start of test",
-      "Minimum 95% accuracy required",
+      "Net WPM = (Total Characters / 5 - Error Characters / 5) / Minutes",
+      "Skill Test Score = (Net WPM / 30) × 60 + (Accuracy / 100) × 40",
+      "Railway Merit = (CBT Score × 0.8) + (Typing Score × 0.2)",
+      "Minimum 85% accuracy required",
       "Duration: 10 minutes on standard computer",
-      "No bilingual option for Senior Clerk and higher posts",
     ],
     negativeMarking:
       "No negative marking. Net WPM = gross WPM minus error deduction.",
@@ -176,20 +184,21 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 40,
     timeMin: 10,
     language: "English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://www.ibps.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ibps.in&sz=64",
     description: "Probationary Officer Examination",
     category: "Banking",
     eligibility: "Graduate in any discipline aged 20-30 years",
     markingScheme:
-      "Typing speed evaluated in interview/process phase for specific roles",
+      "Typing Score = (Net WPM / 35) × 50 + (Accuracy / 100) × 50; Bank Mains Weightage = Typing × 0.15 + Written × 0.85",
     rules: [
-      "Typing test required for specific clerical and data-entry roles",
       "40 WPM minimum for English typing",
-      "Test duration is 10 minutes",
-      "Standard QWERTY keyboard used",
-      "Passage is banking/finance related for contextual practice",
-      "Accuracy of 95% required to pass",
+      "Net WPM = (Total Words - Error Words) / Minutes",
+      "Error Words = (Wrong Words × 0.5) + (Omitted Words × 1)",
+      "Typing Score = (Net WPM / 35) × 50 + (Accuracy / 100) × 50",
+      "Bank Mains Weightage: Typing Test × 0.15 + Written Exam × 0.85",
+      "Accuracy of 90% required to pass",
     ],
     negativeMarking:
       "Errors reduce net speed. Consistent errors may result in test failure.",
@@ -206,17 +215,19 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 30,
     timeMin: 10,
     language: "English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://www.ibps.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ibps.in&sz=64",
     description: "Clerical Cadre Examination",
     category: "Banking",
     eligibility: "12th pass or Graduate depending on the bank",
-    markingScheme: "Qualifying typing test alongside written examination",
+    markingScheme:
+      "Qualifying typing test: 30 WPM and 90% accuracy both required",
     rules: [
       "Typing speed: 30 WPM for English",
       "Test duration: 10 minutes",
-      "Passage provided on screen — must be typed verbatim",
-      "Accuracy minimum: 95%",
+      "Net WPM = (Total Words - Error Words) / Minutes",
+      "Accuracy minimum: 90%",
       "Standard computer keyboard used",
       "No shortcuts or autocomplete features during test",
     ],
@@ -232,25 +243,28 @@ export const EXAMS: ExamData[] = [
     id: "high-court",
     name: "High Court Steno/Clerk",
     authority: "High Court of India",
-    requiredWPM: 30,
+    requiredWPM: 35,
     timeMin: 15,
     language: "English",
-    accuracy: 97,
+    accuracy: 95,
     officialSite: "https://highcourtchd.gov.in",
+    logoUrl:
+      "https://www.google.com/s2/favicons?domain=highcourtchd.gov.in&sz=64",
     description: "High Court Stenographer and Clerk typing test",
     category: "Court",
     eligibility: "Graduate; law background preferred for some posts",
-    markingScheme: "Strict accuracy requirements — 97% minimum accuracy",
+    markingScheme:
+      "Net WPM = (Total Words - (Errors × 0.75)) / Minutes; Judicial Score = (Speed Score × 0.4) + (Accuracy Score × 0.6); Court Typing Weight = 30% of total",
     rules: [
-      "Typing test: 30 WPM minimum for 15 minutes",
-      "Accuracy requirement: 97% (stricter than other exams)",
-      "Legal terminology passages typically used",
-      "No backspace/correction allowed in some High Court exams",
-      "Test is conducted on computer with basic text editor",
-      "Steno: additional shorthand test at 80-100 WPM",
+      "Typing test: 35 WPM minimum for 15 minutes",
+      "Accuracy requirement: 95% (stricter than other exams)",
+      "Net WPM = (Total Words Typed - (Errors × 0.75)) / Minutes",
+      "Judicial Score = (Speed Score × 0.4) + (Accuracy Score × 0.6)",
+      "Speed Score = (Net WPM / Required Speed) × 100",
+      "Court Typing Weight = 30% of total selection",
     ],
     negativeMarking:
-      "Errors strictly penalized. Each error may deduct from total score. High accuracy is critical.",
+      "Errors strictly penalized. Each error deducts 0.75 words from net WPM. High accuracy is critical.",
     importantNotes: [
       "High Court exam rules vary by state — check official HC website",
       "Legal vocabulary practice highly recommended",
@@ -265,18 +279,20 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 30,
     timeMin: 10,
     language: "Hindi/English",
-    accuracy: 95,
+    accuracy: 85,
     officialSite: "https://hssc.gov.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=hssc.gov.in&sz=64",
     description: "Haryana government jobs typing test",
     category: "State Govt",
     eligibility: "Domicile of Haryana required; qualification as per post",
-    markingScheme: "Qualifying in nature; WPM and accuracy both checked",
+    markingScheme:
+      "HSSC Score = (Net WPM × 2) + (Accuracy × 1.5) + (Bonus for Haryana Words × 0.1); Final Merit = Written × 0.8 + Typing × 0.2",
     rules: [
       "Hindi typing: 25 WPM minimum using Kruti Dev or Unicode",
       "English typing: 30 WPM minimum",
-      "Test duration: 10 minutes",
-      "Both Hindi and English typing may be required for bilingual posts",
-      "Accuracy: 95% minimum for qualifying",
+      "Net WPM = (Total Correct Words) / Minutes",
+      "HSSC Score = (Net WPM × 2) + (Accuracy × 1.5) + (Bonus for Haryana Words × 0.1)",
+      "Final Merit = (Written Score × 0.8) + (Typing Score × 0.2)",
       "Haryana government notification must be checked for each post",
     ],
     negativeMarking:
@@ -289,26 +305,59 @@ export const EXAMS: ExamData[] = [
     ],
   },
   {
+    id: "haryana-harton",
+    name: "Haryana Harton",
+    authority: "Haryana Government",
+    requiredWPM: 25,
+    timeMin: 5,
+    language: "Hindi/English",
+    accuracy: 85,
+    officialSite: "https://hssc.gov.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=hssc.gov.in&sz=64",
+    description: "Haryana Harton typing exam — Strokes-based WPM calculation",
+    category: "State Govt",
+    eligibility: "Haryana domicile; qualification as per post",
+    markingScheme:
+      "Gross WPM = (Total Strokes / 5) / Time in minutes; Net WPM = Gross WPM - (Mistakes / 5); Example: 1200 strokes in 5 min with 10 mistakes = 48 - 2 = 46 WPM",
+    rules: [
+      "1 word = 5 Strokes (key depressions)",
+      "Gross WPM = (Total Strokes / 5) / Time in minutes",
+      "Mistakes deduction = Total Mistakes / 5",
+      "Net WPM = Gross WPM - Mistakes deduction",
+      "Example: 1200 strokes in 5 min with 10 mistakes = (1200/5)/5 - 10/5 = 48 - 2 = 46 WPM",
+      "Min Speed: 25-30 WPM | Min Accuracy: 85%",
+    ],
+    negativeMarking:
+      "Mistakes / 5 is deducted from Gross WPM to calculate Net WPM.",
+    importantNotes: [
+      "Strokes-based formula — every keystroke counts",
+      "Hindi typing uses Unicode/Kruti Dev font",
+      "Both Hindi and English passages available",
+      "Haryana domicile certificate mandatory",
+    ],
+  },
+  {
     id: "ldc",
     name: "LDC (Lower Division Clerk)",
     authority: "SSC / State PSC",
-    requiredWPM: 35,
+    requiredWPM: 30,
     timeMin: 10,
     language: "English/Hindi",
-    accuracy: 95,
+    accuracy: 85,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description: "Lower Division Clerk typing test — 10500 KDPH",
     category: "SSC",
     eligibility: "12th pass from a recognized board",
     markingScheme:
-      "10500 key depressions per hour (KDPH) for English; 9000 KDPH for Hindi",
+      "Gross WPM = (Total Characters / 5) / Time; Net WPM = Gross WPM - (Errors × 0.2); Final Score = (Net WPM × 1.5) + (Accuracy × 1.2); Qualify if Speed ≥ 30 AND Accuracy ≥ 85%",
     rules: [
       "English: 10500 KDPH (approx. 35 WPM)",
       "Hindi: 9000 KDPH (approx. 30 WPM)",
-      "Test duration: 10 minutes",
-      "Speed measured in key depressions per hour",
-      "95% accuracy mandatory",
-      "Errors beyond 5% threshold cause disqualification",
+      "Gross WPM = (Total Characters / 5) / Time in minutes",
+      "Net WPM = Gross WPM - (Errors × 0.2)",
+      "Final Score = (Net WPM × 1.5) + (Accuracy × 1.2)",
+      "Qualify if Speed ≥ 30 AND Accuracy ≥ 85%",
     ],
     negativeMarking:
       "Net KDPH = gross KDPH minus errors. Below 10500 KDPH = not qualified.",
@@ -323,25 +372,27 @@ export const EXAMS: ExamData[] = [
     id: "deo",
     name: "DEO (Data Entry Operator)",
     authority: "SSC",
-    requiredWPM: 0,
+    requiredWPM: 40,
     timeMin: 15,
     language: "English",
     accuracy: 95,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description: "15000 Key Depressions Per Hour on computer",
     category: "SSC",
     eligibility: "12th pass with Science/Maths; Computer certificate mandatory",
-    markingScheme: "15000 KDPH minimum (approx. 50 WPM); accuracy 95%+",
+    markingScheme:
+      "Net WPM = (Total Words - Error Words) / Minutes; Efficiency Score = (Net Speed / Required Speed) × 100; Final Score = (Net Speed × 3) + (Accuracy × 2) - (Backspace × 0.2); Qualify if Speed ≥ 40 AND Accuracy ≥ 95%",
     rules: [
       "15000 key depressions per hour minimum",
       "Test duration: 15 minutes on computer",
-      "Data entry includes numbers, symbols, and text",
-      "Standard keyboard layout; numeric keypad may be used",
-      "Accuracy: 95% minimum",
-      "Both alphabetic and numeric data entry tested",
+      "Net WPM = (Total Words - Error Words) / Minutes",
+      "Efficiency Score = (Net Speed / Required Speed) × 100",
+      "Final Score = (Net Speed × 3) + (Accuracy × 2) - (Backspace × 0.2)",
+      "Qualify if Speed ≥ 40 AND Accuracy ≥ 95%",
     ],
     negativeMarking:
-      "No negative marking. Net KDPH must meet 15000 threshold after error deduction.",
+      "No negative marking. Net KDPH must meet 15000 threshold after error deduction. Each backspace use reduces score by 0.2.",
     importantNotes: [
       "DEO in Income Tax: also requires data entry accuracy in accounts",
       "Numeric keypad proficiency is a major advantage",
@@ -356,19 +407,21 @@ export const EXAMS: ExamData[] = [
     requiredWPM: 30,
     timeMin: 10,
     language: "Hindi/English",
-    accuracy: 95,
+    accuracy: 90,
     officialSite: "https://ssc.nic.in",
+    logoUrl: "https://www.google.com/s2/favicons?domain=ssc.nic.in&sz=64",
     description: "State Government Clerk typing examination",
     category: "State Govt",
     eligibility: "12th pass; qualification varies by state",
-    markingScheme: "30 WPM minimum for English; 25 WPM for Hindi; 95% accuracy",
+    markingScheme:
+      "Gross WPM = (Total Characters / 5) / Time; Net WPM = Gross WPM - (Errors × 0.2); Final Score = (Net WPM × 2) + (Accuracy × 1.8); Qualify if Speed ≥ 30 AND Accuracy ≥ 90%",
     rules: [
       "English typing: 30 WPM minimum",
       "Hindi typing: 25 WPM minimum",
-      "Test duration: 10 minutes",
-      "Passage is government notice or official correspondence",
-      "95% accuracy required",
-      "State-specific font requirements (Kruti Dev for many Hindi states)",
+      "Gross WPM = (Total Characters / 5) / Time in minutes",
+      "Net WPM = Gross WPM - (Errors × 0.2)",
+      "Final Score = (Net WPM × 2) + (Accuracy × 1.8)",
+      "Qualify if Speed ≥ 30 AND Accuracy ≥ 90%",
     ],
     negativeMarking:
       "Errors reduce net WPM. State rules may vary — check official notification.",
@@ -383,16 +436,16 @@ export const EXAMS: ExamData[] = [
 
 export const PASSAGES: Record<string, string[]> = {
   english: [
-    "The Government of India has always given priority to the welfare of its citizens through various developmental schemes and programmes. The Ministry of Finance allocates substantial resources every year to ensure that essential services reach every corner of the country. It is the responsibility of every government employee to work diligently and with full honesty so that the common people benefit from these programmes. The integrity and efficiency of the public service system is crucial for the overall development of the nation.",
-    "The Supreme Court of India serves as the apex judicial body responsible for interpreting the Constitution and ensuring justice for all citizens. Every year, thousands of cases are heard by the honourable judges who deliver landmark judgements that shape the legal landscape of the country. The rule of law is the foundation upon which democratic governance rests. Citizens must be aware of their fundamental rights and duties as enshrined in the Constitution of India to participate meaningfully in the democratic process.",
-    "India Post, one of the largest postal networks in the world, has been serving the people of India for over 150 years. With thousands of post offices spread across rural and urban areas, it plays a crucial role in connecting people and facilitating government-to-citizen services. In recent years, the department has embraced digital technology to offer banking, insurance, and delivery services more efficiently. The transformation of India Post into a tech-savvy institution reflects the government's commitment to modernization.",
-    "The National Education Policy 2020 marks a transformative shift in India's education system, aiming to make learning more holistic, flexible, and multidisciplinary. It emphasizes critical thinking, creativity, and the application of knowledge to real-world problems. Under this policy, students will have greater freedom to choose subjects across streams, and vocational education will be integrated from an early age. The focus on mother tongue instruction in primary years recognizes the importance of foundational literacy in one's own language.",
-    "Public sector banks in India have been instrumental in driving financial inclusion across the country. Through schemes like Jan Dhan Yojana, millions of previously unbanked citizens have been brought into the formal financial system. These banks offer a wide range of services including savings accounts, loans, insurance, and pension products to citizens from all walks of life. Digital banking initiatives have further simplified access to financial services, enabling people to conduct transactions from the comfort of their homes.",
+    "The Government of India has always given priority to the welfare of its citizens through various developmental schemes and programmes. The state of Haryana, with its capital at Chandigarh, has been at the forefront of agricultural and industrial development. Cities like Rohtak, Hisar, Karnal, Gurugram, and Faridabad have witnessed tremendous growth over the past few decades. The ancient city of Kurukshetra holds immense historical and religious significance as the place where the Mahabharata war was fought. The Ministry of Finance allocates substantial resources every year to ensure that essential services reach every corner of the country from the mountainous regions of the north to the coastal areas of the south. It is the responsibility of every government employee to work diligently and with full honesty so that the common people benefit from these programmes. The integrity and efficiency of the public service system is crucial for the overall development of the nation. India's Parliament, located in New Delhi, is the supreme legislative body of the country. The Rashtrapati Bhavan is the official residence of the President of India. Our Constitution, adopted on the twenty-sixth of November nineteen forty-nine, guarantees fundamental rights to every citizen. The National flag, with its three colours of saffron, white, and green, represents the values of courage, peace, and prosperity. The Republic of India, with its diverse culture and traditions, stands as one of the largest democracies in the world. Every year on the twenty-sixth of January, the nation celebrates Republic Day with great enthusiasm and patriotic fervour. The Indian Armed Forces, comprising the Army, Navy, and Air Force, protect the sovereignty and territorial integrity of the country. Education and healthcare are two of the most important pillars of national development and the government has been investing heavily in both these sectors. Under various flagship schemes, thousands of schools and hospitals have been built across the country to serve the needs of the population. The National Health Mission aims to provide affordable and quality healthcare to all citizens, especially those living in rural and remote areas. Digital India is another important initiative that seeks to transform the country into a digitally empowered society and knowledge economy. The Prime Minister's Office coordinates policy decisions across all ministries and departments to ensure smooth functioning of the executive machinery. Good governance requires transparency, accountability, and responsiveness to citizen needs at all levels of administration. Local self-governance through Panchayati Raj institutions has empowered millions of citizens at the grassroots level across the country.",
+    "The Supreme Court of India serves as the apex judicial body responsible for interpreting the Constitution and ensuring justice for all citizens. Every year, thousands of cases are heard by the honourable judges who deliver landmark judgements that shape the legal landscape of the country. The rule of law is the foundation upon which democratic governance rests. Citizens must be aware of their fundamental rights and duties as enshrined in the Constitution of India to participate meaningfully in the democratic process. The legal system of India is based on the common law tradition inherited from British colonial rule, but it has evolved significantly since independence to reflect the values and aspirations of the Indian people. The judiciary plays a critical role in protecting individual rights and maintaining the balance of power between different branches of government. From the Supreme Court in Delhi to District Courts across Chandigarh, Rohtak, Hisar, and every corner of the country, justice must be accessible to all. Haryana has several prominent courts serving millions of citizens across districts including Gurugram, Faridabad, Karnal, and Kurukshetra. The legal aid services provided by the government ensure that even the poorest citizens can access justice without financial burden. Court modernization programmes have introduced digital filing systems, video conferencing for hearings, and electronic case management to improve judicial efficiency. Parliament enacts laws that govern every aspect of public and private life, from criminal justice to environmental protection, from taxation to social welfare. The Rashtrapati gives assent to all Bills passed by Parliament before they become law. The Constitution provides for a federal structure with clear division of powers between the Union and the States, ensuring that local needs are addressed effectively while maintaining national unity.",
+    "India Post, one of the largest postal networks in the world, has been serving the people of India for over one hundred and fifty years. With thousands of post offices spread across rural and urban areas from Mumbai to the remote hills of the northeast, it plays a crucial role in connecting people and facilitating government-to-citizen services. In recent years, the department has embraced digital technology to offer banking, insurance, and delivery services more efficiently. The transformation of India Post into a tech-savvy institution reflects the government's commitment to modernization and inclusive growth. The Postal Payment Bank has brought millions of unbanked citizens into the formal financial system especially in remote villages across Haryana, Rajasthan, and Uttar Pradesh. Cities like Rohtak, Hisar, Karnal, and Gurugram have state-of-the-art postal facilities serving businesses and individual customers alike. The National Rural Employment Guarantee Act ensures that rural workers have access to employment and social security through the postal network for payment delivery. Faridabad and other industrial cities rely on the postal and courier network for business correspondence and documentation. Chandigarh, as the capital of Haryana and Punjab, houses key administrative offices that coordinate postal services across the region. The Republic of India's commitment to universal service obligation means that every citizen, regardless of geography, has access to affordable postal services. Parliament has repeatedly strengthened the legal framework governing postal operations to protect consumers and ensure service quality. The Constitution guarantees freedom of communication as part of the fundamental right to expression, making postal services a vital constitutional commitment. National initiatives like Speed Post, Registered Post, and e-Post have modernised the way Indians communicate and transact.",
+    "The National Education Policy 2020 marks a transformative shift in India's education system, aiming to make learning more holistic, flexible, and multidisciplinary. It emphasizes critical thinking, creativity, and the application of knowledge to real-world problems. Under this policy, students will have greater freedom to choose subjects across streams, and vocational education will be integrated from an early age. The focus on mother tongue instruction in primary years recognizes the importance of foundational literacy in one's own language. Schools across Haryana in cities like Rohtak, Hisar, Karnal, Gurugram, Faridabad, and Kurukshetra are actively implementing the new curriculum framework. The government has established model schools in every district to serve as centres of excellence and innovation. Teacher training programmes have been revamped to equip educators with modern pedagogical skills and digital tools. The Chandigarh administration has been a pioneer in implementing educational reforms and has consistently produced top-performing students in national competitive examinations. The Constitution of India guarantees the right to education as a fundamental right for children between six and fourteen years of age. Parliament enacted the Right to Education Act to translate this constitutional provision into practical reality across the Republic. Rashtrapati Bhavan hosts annual felicitation ceremonies for outstanding teachers who have made exceptional contributions to education. The National Scholarship Portal provides financial support to meritorious students from economically weaker sections ensuring that talent is not constrained by financial circumstances. Digital classrooms, e-libraries, and online learning platforms have extended educational opportunities beyond physical boundaries reaching even the most remote villages. Mumbai and Delhi house premier educational institutions that attract students from every corner of the country and contribute to India's knowledge economy.",
+    "Public sector banks in India have been instrumental in driving financial inclusion across the country. Through schemes like Jan Dhan Yojana, millions of previously unbanked citizens have been brought into the formal financial system. These banks offer a wide range of services including savings accounts, loans, insurance, and pension products to citizens from all walks of life. Digital banking initiatives have further simplified access to financial services, enabling people to conduct transactions from the comfort of their homes. The Reserve Bank of India, headquartered in Mumbai, serves as the central bank and regulator of the entire banking system. State Bank of India with its nationwide network has branches in every major city including Chandigarh, Rohtak, Hisar, Karnal, Gurugram, Faridabad, and Kurukshetra. The banking sector of Haryana has grown rapidly in line with the state's economic development, supporting farmers, small businesses, and industrial enterprises. IBPS conducts recruitment examinations for bank clerks, probationary officers, and specialists every year attracting millions of aspirants from across the Republic. The Constitution empowers Parliament to legislate on banking and currency matters ensuring uniform national standards. Rashtrapati gives assent to Banking Regulation Acts that govern the operations of all scheduled commercial banks. The National Payment System has made real-time fund transfers possible across the entire country reducing dependence on cash transactions. Financial literacy campaigns conducted by banks and the government are helping citizens in smaller towns and rural areas understand and use banking products effectively. The Mudra Yojana has provided collateral-free loans to small entrepreneurs and self-employed individuals helping them grow their businesses and create employment in their communities.",
   ],
   hindi: [
-    "भारत सरकार ने देश के नागरिकों के कल्याण के लिए अनेक योजनाएं चलाई हैं। इन योजनाओं का उद्देश्य देश के हर कोने में बुनियादी सुविधाएं पहुंचाना है। सरकारी कर्मचारियों का यह दायित्व है कि वे ईमानदारी और लगन से कार्य करें ताकि आम जनता को अधिकतम लाभ मिल सके। राष्ट्र के विकास में प्रशासनिक दक्षता और जनसेवा का महत्वपूर्ण योगदान होता है।",
-    "भारत का संविधान विश्व का सबसे लंबा लिखित संविधान है जो नागरिकों को मौलिक अधिकार और कर्तव्य प्रदान करता है। यह संविधान 26 नवंबर 1949 को अंगीकृत किया गया और 26 जनवरी 1950 को लागू हुआ। भारतीय लोकतंत्र संविधान की आधारशिला पर खड़ा है। प्रत्येक नागरिक को अपने मौलिक अधिकारों की जानकारी होनी चाहिए और अपने कर्तव्यों का पालन करना चाहिए।",
-    "रेलवे भर्ती बोर्ड हर वर्ष हजारों पदों पर भर्ती करता है। यह परीक्षा देश भर के लाखों उम्मीदवारों द्वारा दी जाती है। टाइपिंग टेस्ट में उम्मीदवार को दिए गए अनुच्छेद को यथाशीघ्र और शुद्धता के साथ टाइप करना होता है। हिंदी टाइपिंग के लिए यूनिकोड या कृतिदेव फ़ॉन्ट का उपयोग किया जाता है। उम्मीदवारों को परीक्षा से पूर्व दोनों फ़ॉन्ट का अभ्यास करना चाहिए।",
+    "भारत सरकार ने देश के नागरिकों के कल्याण के लिए अनेक योजनाएं चलाई हैं। हरियाणा राज्य, जिसकी राजधानी चंडीगढ़ है, कृषि और औद्योगिक विकास में सदा अग्रणी रहा है। रोहतक, हिसार, करनाल, गुरुग्राम और फरीदाबाद जैसे नगरों ने पिछले कुछ दशकों में अत्यधिक विकास किया है। कुरुक्षेत्र का प्राचीन नगर महाभारत युद्ध की ऐतिहासिक और धार्मिक दृष्टि से अत्यंत महत्वपूर्ण स्थान है। वित्त मंत्रालय प्रत्येक वर्ष पर्याप्त संसाधन आवंटित करता है ताकि आवश्यक सेवाएं देश के हर कोने तक पहुंच सकें। यह प्रत्येक सरकारी कर्मचारी का दायित्व है कि वह पूरी ईमानदारी और लगन से कार्य करे। भारत की संसद, जो नई दिल्ली में स्थित है, देश का सर्वोच्च विधायी निकाय है। राष्ट्रपति भवन भारत के राष्ट्रपति का आधिकारिक निवास है। हमारा संविधान, जो उन्नीस सौ उनचास में छब्बीस नवंबर को अपनाया गया, प्रत्येक नागरिक को मौलिक अधिकार प्रदान करता है। राष्ट्रीय ध्वज के तीन रंग — केसरिया, सफेद और हरा — क्रमशः साहस, शांति और समृद्धि के प्रतीक हैं। भारतीय गणतंत्र अपनी विविध संस्कृति और परंपराओं के साथ विश्व के सबसे बड़े लोकतंत्रों में से एक है। प्रत्येक वर्ष छब्बीस जनवरी को देश हर्षोल्लास के साथ गणतंत्र दिवस मनाता है। भारतीय सशस्त्र बल देश की संप्रभुता और क्षेत्रीय अखंडता की रक्षा करते हैं। शिक्षा और स्वास्थ्य सेवाएं राष्ट्रीय विकास के सबसे महत्वपूर्ण स्तंभ हैं और सरकार इन दोनों क्षेत्रों में भारी निवेश कर रही है। विभिन्न प्रमुख योजनाओं के तहत देश भर में हजारों विद्यालय और अस्पताल बनाए गए हैं। राष्ट्रीय स्वास्थ्य मिशन का उद्देश्य सभी नागरिकों को सस्ती और गुणवत्तापूर्ण स्वास्थ्य सेवाएं प्रदान करना है।",
+    "भारत का संविधान विश्व का सबसे लंबा लिखित संविधान है जो नागरिकों को मौलिक अधिकार और कर्तव्य प्रदान करता है। यह संविधान छब्बीस नवंबर उन्नीस सौ उनचास को अंगीकृत किया गया और छब्बीस जनवरी उन्नीस सौ पचास को लागू हुआ। भारतीय लोकतंत्र संविधान की आधारशिला पर खड़ा है। प्रत्येक नागरिक को अपने मौलिक अधिकारों की जानकारी होनी चाहिए और अपने कर्तव्यों का पालन करना चाहिए। हरियाणा के चंडीगढ़, रोहतक, हिसार, करनाल, गुरुग्राम, फरीदाबाद और कुरुक्षेत्र जैसे प्रमुख नगरों में नागरिकों को संवैधानिक अधिकारों के प्रति जागरूक किया जा रहा है। सर्वोच्च न्यायालय संविधान की व्याख्या करने और सभी नागरिकों को न्याय दिलाने के लिए जिम्मेदार सर्वोच्च न्यायिक निकाय है। संसद द्वारा पारित प्रत्येक विधेयक को राष्ट्रपति की स्वीकृति के बाद ही कानून का रूप मिलता है। राष्ट्रपति भवन में प्रत्येक वर्ष राष्ट्रीय पुरस्कार वितरण समारोह आयोजित होते हैं जिनमें विभिन्न क्षेत्रों में उत्कृष्ट कार्य करने वाले नागरिकों को सम्मानित किया जाता है। गणतंत्र दिवस परेड में देश की सैन्य शक्ति, सांस्कृतिक विविधता और विकास उपलब्धियों का भव्य प्रदर्शन किया जाता है। राष्ट्रीय एकता और अखंडता बनाए रखना हर भारतीय नागरिक का सर्वोच्च कर्तव्य है। मुंबई, दिल्ली और चंडीगढ़ जैसे महानगर देश की आर्थिक प्रगति में महत्वपूर्ण योगदान देते हैं। डिजिटल इंडिया कार्यक्रम ने सरकारी सेवाओं को ऑनलाइन उपलब्ध कराकर नागरिकों का जीवन सरल बना दिया है।",
+    "रेलवे भर्ती बोर्ड हर वर्ष हजारों पदों पर भर्ती करता है। यह परीक्षा देश भर के लाखों उम्मीदवारों द्वारा दी जाती है। टाइपिंग टेस्ट में उम्मीदवार को दिए गए अनुच्छेद को यथाशीघ्र और शुद्धता के साथ टाइप करना होता है। हिंदी टाइपिंग के लिए यूनिकोड या कृतिदेव फ़ॉन्ट का उपयोग किया जाता है। हरियाणा के रोहतक, हिसार, करनाल और गुरुग्राम जैसे जिलों से हजारों उम्मीदवार प्रतिवर्ष सरकारी सेवा परीक्षाओं में भाग लेते हैं। चंडीगढ़ में स्थित विभिन्न सरकारी कार्यालय और प्रशिक्षण संस्थान उम्मीदवारों को परीक्षा की तैयारी में सहायता प्रदान करते हैं। फरीदाबाद और गुरुग्राम के औद्योगिक क्षेत्रों में डेटा एंट्री ऑपरेटरों और लिपिकों की भारी मांग है। कुरुक्षेत्र विश्वविद्यालय सरकारी सेवा परीक्षाओं की तैयारी के लिए उत्कृष्ट कोचिंग और संसाधन प्रदान करता है। संसद में पारित श्रम कानून सरकारी कर्मचारियों के अधिकारों और सेवा शर्तों की रक्षा करते हैं। राष्ट्रपति प्रत्येक वर्ष गणतंत्र दिवस पर राष्ट्र को संबोधित करते हैं और देश की प्रगति की समीक्षा प्रस्तुत करते हैं। भारतीय संविधान में दिए गए मौलिक अधिकार सुनिश्चित करते हैं कि प्रत्येक नागरिक को समान अवसर और न्याय मिले। मुंबई में स्थित भारतीय स्टेट बैंक का मुख्यालय देश की वित्तीय प्रणाली की रीढ़ है और लाखों कर्मचारियों को रोजगार प्रदान करता है।",
   ],
 };
 
@@ -406,4 +459,22 @@ export function getPassagesForExam(exam: ExamData): string[] {
 export function getRandomPassage(exam: ExamData): string {
   const passages = getPassagesForExam(exam);
   return passages[Math.floor(Math.random() * passages.length)];
+}
+
+export function generatePassageOfLength(
+  exam: ExamData,
+  wordCount: number,
+): string {
+  const basePassages = getPassagesForExam(exam);
+  const allWords = basePassages
+    .join(" ")
+    .split(" ")
+    .filter((w) => w.length > 0);
+  const result: string[] = [];
+  let i = 0;
+  while (result.length < wordCount) {
+    result.push(allWords[i % allWords.length]);
+    i++;
+  }
+  return result.slice(0, wordCount).join(" ");
 }
