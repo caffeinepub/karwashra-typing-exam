@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { EXAMS, getRandomPassage } from "@/data/exams";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Play, RotateCcw, Timer } from "lucide-react";
+import { ArrowLeft, Highlighter, Play, RotateCcw, Timer } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type TestState = "idle" | "running" | "finished";
@@ -11,21 +11,70 @@ type TestState = "idle" | "running" | "finished";
 function PassageDisplay({
   passage,
   typed,
-}: { passage: string; typed: string }) {
-  const chars = passage.split("");
+  highlightEnabled,
+}: { passage: string; typed: string; highlightEnabled: boolean }) {
+  // Split passage into word segments (words + spaces)
+  const segments: { text: string; startIndex: number }[] = [];
+  let i = 0;
+  while (i < passage.length) {
+    const spaceStart = i;
+    // collect spaces
+    while (i < passage.length && passage[i] === " ") i++;
+    if (i > spaceStart) {
+      segments.push({
+        text: passage.slice(spaceStart, i),
+        startIndex: spaceStart,
+      });
+    }
+    // collect word chars
+    const wordStart = i;
+    while (i < passage.length && passage[i] !== " ") i++;
+    if (i > wordStart) {
+      segments.push({
+        text: passage.slice(wordStart, i),
+        startIndex: wordStart,
+      });
+    }
+  }
+
+  const cursorPos = typed.length;
+
   return (
     <div className="font-mono text-base leading-loose select-none">
-      {chars.map((char, i) => {
-        let cls = "passage-upcoming";
-        if (i < typed.length) {
-          cls = typed[i] === char ? "passage-correct" : "passage-error";
-        } else if (i === typed.length) {
-          cls = "passage-current";
-        }
-        const key = `char-${i}-${char}`;
+      {segments.map((seg) => {
+        const isCurrentWord =
+          highlightEnabled &&
+          cursorPos >= seg.startIndex &&
+          cursorPos < seg.startIndex + seg.text.length;
+
+        const chars = seg.text.split("").map((char, ci) => {
+          const globalIndex = seg.startIndex + ci;
+          let cls = "passage-upcoming";
+          if (!highlightEnabled) {
+            cls = "text-gray-400";
+          } else if (globalIndex < typed.length) {
+            cls =
+              typed[globalIndex] === char ? "passage-correct" : "passage-error";
+          } else if (globalIndex === typed.length) {
+            cls = "passage-current";
+          }
+          return (
+            <span key={`c-${globalIndex}`} className={cls}>
+              {char}
+            </span>
+          );
+        });
+
         return (
-          <span key={key} className={cls}>
-            {char}
+          <span
+            key={`seg-${seg.startIndex}`}
+            className={
+              isCurrentWord
+                ? "bg-yellow-100 rounded px-0.5 text-[1.08em] transition-all duration-100"
+                : ""
+            }
+          >
+            {chars}
           </span>
         );
       })}
@@ -43,6 +92,7 @@ export function TypingTest() {
   const [state, setState] = useState<TestState>("idle");
   const [timeLeft, setTimeLeft] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
+  const [highlightEnabled, setHighlightEnabled] = useState(true);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -232,12 +282,31 @@ export function TypingTest() {
           data-ocid="test.panel"
         >
           <div className="text-sm text-muted-foreground mb-3 flex items-center justify-between">
-            <span>Passage — type this text below</span>
+            <div className="flex items-center gap-3">
+              <span>Passage — type this text below</span>
+              <button
+                type="button"
+                onClick={() => setHighlightEnabled((v) => !v)}
+                data-ocid="test.toggle"
+                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border font-medium transition-colors ${
+                  highlightEnabled
+                    ? "border-yellow-400 bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                    : "border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                }`}
+              >
+                <Highlighter className="w-3 h-3" />
+                Highlight: {highlightEnabled ? "ON" : "OFF"}
+              </button>
+            </div>
             <span className="font-mono text-xs">
               {typed.length} / {passage.length}
             </span>
           </div>
-          <PassageDisplay passage={passage} typed={typed} />
+          <PassageDisplay
+            passage={passage}
+            typed={typed}
+            highlightEnabled={highlightEnabled}
+          />
         </div>
 
         <div className="bg-white rounded-xl border border-border shadow-card p-6">
