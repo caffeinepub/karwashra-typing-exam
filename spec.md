@@ -1,42 +1,45 @@
 # Karwashra Typing Exam
 
 ## Current State
-Home page uses a Soni Typing Tutor 5.1 style layout (light gray background, orange icon tiles, 2-column panels, exam category buttons). The app has 13+ government exams. There are pages for Live Test, Practice, Learning. Footer has social media icons.
+The app has a typing test at `/exam/$id/test` using a modern card-based UI with stats, compact passage box, settings panel, and standard controls. Exams are defined in `src/frontend/src/data/exams.ts`.
 
 ## Requested Changes (Diff)
 
 ### Add
-- New home page design matching uploaded reference image (1774530358460...png):
-  - Blue gradient header with keyboard logo "Manish Karwashra Typing", Login/Register buttons top right
-  - Language selector bar below header (Hindi | English | All Language)
-  - Hero section: welcome text, keyboard/books illustration, 4 large action buttons (Live Test, Typing Practice, Mock Test, Learning Typing)
-  - Gaming section: 4 cards flanking the hero buttons (left: eSports Officials, Competitive Gaming League; right: Gaming Ethics & Law, Gaming Strategy)
-  - "Prepare for All Competitive and Gaming Exams" heading
-  - Exam grid: 2 rows of 12 exam tiles with icons and labels
-    Row 1: All Govt Exam, State Exam, Harton Exam, Court, Banking, DCSCB, HSSC, Clerk, NVS, UP Police, Delhi Police, SBI PO
-    Row 2: USC, DSSSB, SSC, KNK, EDV, NABARD, KVS, CTET, IBPS Clerk, LIC ADO, PSU Exams, State PCS
-  - Social media icons footer (YouTube, Instagram, Twitter, Threads)
-  - Footer links: About Us | Contact Us | Privacy Policy | Terms & Conditions
-  - Copyright line
-- New exams data: NVS, UP Police, Delhi Police, SBI PO, USC, KNK, EDV, NABARD, KVS, CTET, LIC ADO, PSU Exams, State PCS with typing test data
-- Gaming section: 4 gaming typing categories with game-themed paragraphs
-  - eSports Officials (English, 10 min, 35 WPM)
-  - Competitive Gaming League (English, 10 min, 35 WPM)
-  - Gaming Ethics & Law (English, 10 min, 35 WPM)
-  - Gaming Strategy (English, 10 min, 35 WPM)
-- /mock-test page: same as typing test but styled as "Mock Test" with exam selection
-- Mock Test button on home page navigates to /mock-test
+- New TCS ION / SSC Digital Examination Module-style interface for the TypingTest page, exactly matching the uploaded reference screenshots
+- New exams to `exams.ts`: Delhi Police HCM, SSC MTS, State Level (general), PCS (Provincial Civil Services), Teaching (TET/CTET), Clerk (general)
+- Group tabs (Group 1, Group 2, Group 3) that select from 3 pre-loaded paragraphs for the exam
+- Candidate Profile right panel with circular photo placeholder, User ID field, Password field, Log in button
 
 ### Modify
-- exams.ts: Add new exam entries for all new exams + gaming categories
-- App.tsx: Add /mock-test route
-- Home.tsx: Complete redesign to match reference image
+- `TypingTest.tsx`: Complete visual redesign to match TCS ION exam interface:
+  - Dark gray title bar with "Typing Test [current date]" centered, window-style toolbar icons (save, print, help) at top-left
+  - Exam name (e.g., "SSC CHSL/CGL") in small label below title bar
+  - Group 1 / Group 2 / Group 3 tabs (active tab highlighted blue) — clicking switches to different paragraph
+  - "Time Left: MM:SS" display top-right in bold
+  - Purple/indigo info bar below tabs: "Keyboard Layout: Inscript  Language: English" (or Hindi)
+  - Main 2-column layout: left ~80% passage + controls + typing area; right ~20% candidate panel
+  - Passage area: large white box with justified text, serif font, scrollable, no word highlights (clean official exam style)
+  - Controls bar below passage: Duration dropdown (15 Minutes default), << prev exercise, "Exercise: X/270" dropdown, >> next, Pause button, A+ A A- font size buttons
+  - Typing textarea: white box below controls, same width as passage
+  - Right panel (CANDIDATE PROFILE & LOGIN): circular candidate photo (placeholder avatar), User ID input, Password input (dots), Log in button (blue), "Forgot password?" link; if logged in show username in User ID
+  - Footer bar: "SSC Digital Examination Module : Powered by Karwashra Typing Exam"
+  - Timer turns red in last 60 seconds
+  - Backspace control maintained
 
 ### Remove
-- Old Soni Typing Tutor 5.1 orange-tile layout from Home.tsx
+- Old card-based stats grid and settings panel from TypingTest view (moved into the right panel / controls bar)
 
 ## Implementation Plan
-1. Update src/frontend/src/data/exams.ts -- add 13+ new exam entries including gaming categories
-2. Create src/frontend/src/pages/MockTestPage.tsx -- reuse TypingTest component with mock test mode
-3. Update src/frontend/src/App.tsx -- add /mock-test route
-4. Rewrite src/frontend/src/pages/Home.tsx -- new design matching reference image exactly
+1. Add missing exams to `src/frontend/src/data/exams.ts`: Delhi Police HCM (id: delhi-police-hcm), SSC MTS (id: ssc-mts), State Level (id: state-level), PCS (id: pcs), Teaching (id: teaching), Clerk (id: clerk)
+2. Rewrite `src/frontend/src/pages/TypingTest.tsx` with TCS ION-style layout:
+   - Title bar: dark (#2d2d2d), centered white title text "Typing Test [date]", left side small icons (document/save/print/help using lucide icons)
+   - Below title: exam name label (dark bg, white text, left-aligned)
+   - Tabs row: Group 1, Group 2, Group 3 (blue active, gray inactive), Time Left right-aligned
+   - Info bar: purple/indigo background (#5b5ea6 or similar), white text, Keyboard Layout + Language
+   - Main area: flex row, left side ~80%, right side ~20% (fixed ~260px)
+   - Left side: passage box (white bg, black justified text, max-height ~280px overflow-y-auto, font-size adjustable), then controls bar (gray bg, Duration dropdown | << | Exercise dropdown | >> | Pause | A+ A A-), then typing textarea
+   - Right side panel: header "CANDIDATE PROFILE & LOGIN" (blue bg, white text), circular photo (gray placeholder), User ID + Password inputs (if not logged in), Log in button; if logged in show username and green "Logged In" badge
+   - Footer: gray bar, centered text
+   - Generate 3 paragraphs for each group on mount, Group tabs switch active paragraph
+3. Ensure existing routing and exam navigation still works

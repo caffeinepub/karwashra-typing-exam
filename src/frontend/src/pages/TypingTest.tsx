@@ -1,23 +1,22 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Slider } from "@/components/ui/slider";
 import { EXAMS, generatePassageOfLength } from "@/data/exams";
 import { useActor } from "@/hooks/useActor";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import {
-  ArrowLeft,
-  Highlighter,
-  Play,
-  Radio,
-  RotateCcw,
-  Timer,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  HelpCircle,
+  Maximize2,
+  Minimize2,
+  Printer,
+  Save,
   User,
+  X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type TestState = "idle" | "running" | "finished";
+type TestState = "idle" | "running" | "paused" | "finished";
 
 const TIME_PRESETS = [1, 2, 5, 10, 15, 20];
 
@@ -25,7 +24,6 @@ function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-/** Get available language options for an exam */
 function getLanguageOptions(examLanguage: string): string[] {
   const lang = examLanguage.toLowerCase();
   if (lang.includes("hindi") && lang.includes("english"))
@@ -34,16 +32,13 @@ function getLanguageOptions(examLanguage: string): string[] {
   return ["English"];
 }
 
-// Memoized passage display for performance — avoids re-render on every keystroke
 const PassageDisplay = memo(function PassageDisplay({
   passage,
   typed,
-  highlightEnabled,
   fontSize,
 }: {
   passage: string;
   typed: string;
-  highlightEnabled: boolean;
   fontSize: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +53,6 @@ const PassageDisplay = memo(function PassageDisplay({
       const elBottom = elTop + el.offsetHeight;
       const containerScrollTop = container.scrollTop;
       const containerBottom = containerScrollTop + container.clientHeight;
-
       if (elBottom > containerBottom - 40) {
         container.scrollTop = elTop - container.clientHeight / 2;
       } else if (elTop < containerScrollTop + 20) {
@@ -67,69 +61,71 @@ const PassageDisplay = memo(function PassageDisplay({
     }
   }, [typed.length]);
 
-  const segments: { text: string; startIndex: number }[] = [];
-  let i = 0;
-  while (i < passage.length) {
-    const spaceStart = i;
-    while (i < passage.length && passage[i] === " ") i++;
-    if (i > spaceStart)
-      segments.push({
-        text: passage.slice(spaceStart, i),
-        startIndex: spaceStart,
-      });
-    const wordStart = i;
-    while (i < passage.length && passage[i] !== " ") i++;
-    if (i > wordStart)
-      segments.push({
-        text: passage.slice(wordStart, i),
-        startIndex: wordStart,
-      });
-  }
-  const cursorPos = typed.length;
+  const words = passage.split(" ");
+  let charIndex = 0;
 
   return (
     <div
       ref={containerRef}
       className="overflow-y-auto"
-      style={{ maxHeight: "180px" }}
+      style={{ height: "260px" }}
     >
       <div
-        className="font-mono leading-loose select-none"
-        style={{ fontSize: `${fontSize}px` }}
+        style={{
+          fontSize: `${fontSize}px`,
+          lineHeight: "2",
+          textAlign: "justify",
+          fontFamily: "serif",
+          color: "#111",
+        }}
       >
-        {segments.map((seg) => {
-          const isCurrentWord =
-            highlightEnabled &&
-            cursorPos >= seg.startIndex &&
-            cursorPos < seg.startIndex + seg.text.length;
-          const chars = seg.text.split("").map((char, ci) => {
-            const gi = seg.startIndex + ci;
-            let cls = "passage-upcoming";
-            if (!highlightEnabled) cls = "text-gray-400";
-            else if (gi < typed.length)
-              cls = typed[gi] === char ? "passage-correct" : "passage-error";
-            else if (gi === typed.length) cls = "passage-current";
+        {words.map((word, wi) => {
+          const wordStart = charIndex;
+          const wordEnd = charIndex + word.length;
+          charIndex += word.length + 1; // +1 for space
+
+          const chars = word.split("").map((char, ci) => {
+            const gi = wordStart + ci;
+            let color = "#888";
+            if (gi < typed.length) {
+              color = typed[gi] === char ? "#1a7f1a" : "#cc2222";
+            } else if (gi === typed.length) {
+              color = "#1155cc";
+            }
             const isCurrent = gi === typed.length;
             return (
               <span
-                key={`c-${gi}`}
-                className={cls}
+                key={gi}
                 ref={isCurrent ? currentCharRef : undefined}
+                style={{
+                  color,
+                  backgroundColor: isCurrent ? "#cce5ff" : "transparent",
+                }}
               >
                 {char}
               </span>
             );
           });
+
           return (
-            <span
-              key={`seg-${seg.startIndex}`}
-              className={
-                isCurrentWord
-                  ? "bg-yellow-100 rounded px-0.5 text-[1.08em] transition-all duration-100"
-                  : ""
-              }
-            >
+            <span key={wordStart}>
               {chars}
+              {wi < words.length - 1 ? (
+                <span
+                  style={{
+                    color:
+                      wordEnd < typed.length
+                        ? typed[wordEnd] === " "
+                          ? "#888"
+                          : "#cc2222"
+                        : wordEnd === typed.length
+                          ? "#1155cc"
+                          : "#bbb",
+                  }}
+                >
+                  {" "}
+                </span>
+              ) : null}
             </span>
           );
         })}
@@ -150,45 +146,55 @@ export function TypingTest() {
     [exam],
   );
 
-  const [passage, setPassage] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(
+    languageOptions[0],
+  );
+  const [selectedTimeMin, setSelectedTimeMin] = useState(exam?.timeMin ?? 10);
+  const [fontSize, setFontSize] = useState(16);
+  const [backspaceAllowed, setBackspaceAllowed] = useState(true);
+
+  // 3 group paragraphs
+  const [groups, setGroups] = useState<string[]>([]);
+  const [activeGroup, setActiveGroup] = useState(1); // 1-indexed
+
   const [typed, setTyped] = useState("");
   const [state, setState] = useState<TestState>("idle");
   const [timeLeft, setTimeLeft] = useState(0);
   const [startTime, setStartTime] = useState<number>(0);
-  const [highlightEnabled, setHighlightEnabled] = useState(true);
-  const [backspaceAllowed, setBackspaceAllowed] = useState(true);
-  const [selectedTimeMin, setSelectedTimeMin] = useState(exam?.timeMin ?? 10);
-  const [paragraphWords, setParagraphWords] = useState(400);
-  const [fontSize, setFontSize] = useState(16);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>(
-    languageOptions[0],
-  );
+
+  // Login form state (right panel)
+  const [loginUserId, setLoginUserId] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const resetTest = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (exam) {
-      setPassage(
-        generatePassageOfLength(exam, paragraphWords, selectedLanguage),
-      );
-      setTimeLeft(selectedTimeMin * 60);
-    }
+  const passage = groups[activeGroup - 1] ?? "";
+
+  // Generate 3 group paragraphs on mount / exam / language change
+  useEffect(() => {
+    if (!exam) return;
+    const generated = [1, 2, 3].map(() =>
+      generatePassageOfLength(exam, 400, selectedLanguage),
+    );
+    setGroups(generated);
+    setActiveGroup(1);
     setTyped("");
     setState("idle");
-  }, [exam, paragraphWords, selectedTimeMin, selectedLanguage]);
+    setTimeLeft(selectedTimeMin * 60);
+  }, [exam, selectedLanguage, selectedTimeMin]);
 
+  // Cleanup on unmount
   useEffect(() => {
-    resetTest();
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [resetTest]);
+  }, []);
 
   const startTest = () => {
     setState("running");
     setStartTime(Date.now());
+    setTimeLeft(selectedTimeMin * 60);
     textareaRef.current?.focus();
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
@@ -200,6 +206,26 @@ export function TypingTest() {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const pauseTest = () => {
+    if (state === "running") {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setState("paused");
+    } else if (state === "paused") {
+      setState("running");
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current!);
+            setState("finished");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      textareaRef.current?.focus();
+    }
   };
 
   const finishTest = useCallback(
@@ -278,8 +304,23 @@ export function TypingTest() {
     ],
   );
 
+  // Auto-finish when state becomes finished after timer
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional - only trigger on state change
+  useEffect(() => {
+    if (state === "finished" && startTime > 0) {
+      finishTest(typed);
+    }
+  }, [state]);
+
   const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (state !== "running") return;
+    if (state !== "running") {
+      // Auto-start on first keypress
+      if (state === "idle" && e.target.value.length > 0) {
+        startTest();
+        setTyped(e.target.value);
+      }
+      return;
+    }
     const value = e.target.value;
     if (value.length > passage.length) return;
     setTyped(value);
@@ -290,7 +331,6 @@ export function TypingTest() {
     if (!backspaceAllowed && e.key === "Backspace") e.preventDefault();
   };
 
-  // Memoize stats to avoid expensive recalc every render
   const stats = useMemo(() => {
     const elapsed =
       state === "running" && startTime > 0
@@ -306,21 +346,28 @@ export function TypingTest() {
     return { wpm, accuracy, errors };
   }, [typed, passage, state, startTime]);
 
-  const progress =
-    selectedTimeMin > 0
-      ? ((selectedTimeMin * 60 - timeLeft) / (selectedTimeMin * 60)) * 100
-      : 0;
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   const timeStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
+  // Date for title bar
+  const today = new Date();
+  const dateStr = today.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   if (!exam) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Exam not found.</p>
-          <Link to="/exams">
-            <Button>Back to Exams</Button>
+          <p className="text-gray-600 mb-4">Exam not found.</p>
+          <Link
+            to="/exams"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Back to Exams
           </Link>
         </div>
       </div>
@@ -328,338 +375,1014 @@ export function TypingTest() {
   }
 
   return (
-    <main className="min-h-screen bg-light-gray">
-      <div className="bg-navy">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/exam/$id/rules"
-              params={{ id }}
-              className="text-white/65 hover:text-white transition-colors"
-              data-ocid="test.link"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="flex items-center gap-2">
-              {exam.logoUrl && (
-                <img
-                  src={exam.logoUrl}
-                  alt={`${exam.name} logo`}
-                  className="w-7 h-7 rounded object-contain bg-white p-0.5"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              )}
-              <div>
-                <div className="text-white font-poppins font-bold text-sm">
-                  {exam.name} — Typing Test
-                </div>
-                <div className="text-white/55 text-xs">{exam.authority}</div>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {isLoggedIn && auth?.username && (
-              <div className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/20 rounded px-3 py-1 text-white text-xs font-mono">
-                <User className="w-3 h-3" />
-                Login ID: <span className="font-bold">{auth.username}</span>
-              </div>
-            )}
-            <Badge
-              className={`font-mono text-base px-3 py-1 ${
-                timeLeft < 60
-                  ? "bg-red-500 text-white"
-                  : "bg-blue-brand/30 text-white"
-              }`}
-            >
-              <Timer className="w-3.5 h-3.5 mr-1.5" />
-              {timeStr}
-            </Badge>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={resetTest}
-              className="text-white hover:bg-white/10 rounded-full"
-              data-ocid="test.secondary_button"
-            >
-              <RotateCcw className="w-4 h-4 mr-1" /> Reset
-            </Button>
-          </div>
+    <div
+      className="flex flex-col"
+      style={{
+        height: "100vh",
+        backgroundColor: "#f0f0f0",
+        overflow: "hidden",
+      }}
+    >
+      {/* ═══ TITLE BAR ═══ */}
+      <div
+        style={{
+          backgroundColor: "#e0e0e0",
+          borderBottom: "1px solid #bbb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "3px 6px",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <button
+            type="button"
+            title="Menu"
+            style={{
+              padding: "2px 4px",
+              border: "1px solid #aaa",
+              background: "#f8f8f8",
+              cursor: "pointer",
+              borderRadius: "2px",
+            }}
+          >
+            <FileText size={14} color="#555" />
+          </button>
+          <button
+            type="button"
+            title="Save"
+            style={{
+              padding: "2px 4px",
+              border: "1px solid #aaa",
+              background: "#f8f8f8",
+              cursor: "pointer",
+              borderRadius: "2px",
+            }}
+          >
+            <Save size={14} color="#555" />
+          </button>
+          <button
+            type="button"
+            title="Print"
+            style={{
+              padding: "2px 4px",
+              border: "1px solid #aaa",
+              background: "#f8f8f8",
+              cursor: "pointer",
+              borderRadius: "2px",
+            }}
+          >
+            <Printer size={14} color="#555" />
+          </button>
+          <button
+            type="button"
+            title="Help"
+            style={{
+              padding: "2px 4px",
+              border: "1px solid #aaa",
+              background: "#f8f8f8",
+              cursor: "pointer",
+              borderRadius: "2px",
+            }}
+          >
+            <HelpCircle size={14} color="#555" />
+          </button>
         </div>
-        <Progress value={progress} className="h-1 rounded-none bg-white/10" />
+        <div
+          style={{
+            fontWeight: "bold",
+            fontSize: "15px",
+            color: "#222",
+            letterSpacing: "0.3px",
+          }}
+        >
+          Typing Test — {dateStr}
+        </div>
+        <div style={{ display: "flex", gap: "3px" }}>
+          <button
+            type="button"
+            title="Minimize"
+            style={{
+              width: "20px",
+              height: "20px",
+              border: "1px solid #888",
+              background: "#d4d4d4",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "2px",
+            }}
+          >
+            <Minimize2 size={11} />
+          </button>
+          <button
+            type="button"
+            title="Maximize"
+            style={{
+              width: "20px",
+              height: "20px",
+              border: "1px solid #888",
+              background: "#d4d4d4",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "2px",
+            }}
+          >
+            <Maximize2 size={11} />
+          </button>
+          <Link to="/exams">
+            <button
+              type="button"
+              title="Close"
+              data-ocid="test.close_button"
+              style={{
+                width: "20px",
+                height: "20px",
+                border: "1px solid #888",
+                background: "#e05555",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "2px",
+              }}
+            >
+              <X size={11} color="white" />
+            </button>
+          </Link>
+        </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-3">
-          {[
-            {
-              label: "WPM",
-              value: state === "running" ? stats.wpm : "—",
-              highlight: stats.wpm >= exam.requiredWPM && state === "running",
-            },
-            {
-              label: "Accuracy",
-              value: state === "running" ? `${stats.accuracy}%` : "—",
-              highlight: stats.accuracy >= exam.accuracy && state === "running",
-            },
-            {
-              label: "Errors",
-              value: state === "running" ? stats.errors : "—",
-              highlight: false,
-            },
-            {
-              label: "Required WPM",
-              value: exam.requiredWPM > 0 ? exam.requiredWPM : "KDPH",
-              highlight: false,
-            },
-          ].map(({ label, value, highlight }) => (
-            <div
-              key={label}
-              className={`rounded-xl p-3 text-center shadow-card border ${
-                highlight
-                  ? "bg-green-50 border-green-200"
-                  : "bg-white border-border"
-              }`}
+      {/* ═══ EXAM NAME BAR ═══ */}
+      <div
+        style={{
+          backgroundColor: "#1a1a1a",
+          color: "white",
+          fontSize: "12px",
+          padding: "2px 8px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ fontWeight: "600" }}>{exam.name}</span>
+        <span style={{ color: "#aaa", fontSize: "11px" }}>Instructions</span>
+      </div>
+
+      {/* ═══ TABS + TIMER ROW ═══ */}
+      <div
+        style={{
+          backgroundColor: "#d0d0d0",
+          borderBottom: "1px solid #b8b8b8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "3px 8px",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", gap: "3px" }}>
+          {[1, 2, 3].map((g) => (
+            <button
+              key={g}
+              type="button"
+              data-ocid="test.tab"
+              onClick={() => {
+                if (state === "idle") {
+                  setActiveGroup(g);
+                  setTyped("");
+                }
+              }}
+              style={{
+                padding: "2px 12px",
+                fontSize: "12px",
+                border: "1px solid #999",
+                cursor: state === "idle" ? "pointer" : "default",
+                fontWeight: activeGroup === g ? "600" : "400",
+                backgroundColor: activeGroup === g ? "#4a90d9" : "#c0c0c0",
+                color: activeGroup === g ? "white" : "#333",
+                borderRadius: "2px 2px 0 0",
+              }}
             >
-              <div
-                className={`font-poppins font-bold text-xl ${highlight ? "text-green-700" : "text-navy"}`}
-              >
-                {value}
-              </div>
-              <div className="text-xs text-muted-foreground">{label}</div>
-            </div>
+              Group {g}
+            </button>
           ))}
         </div>
-
-        {/* Passage box — fixed compact height */}
         <div
-          className="bg-white rounded-xl border border-border shadow-card p-4"
-          data-ocid="test.panel"
+          style={{
+            fontWeight: "bold",
+            fontSize: "13px",
+            color: timeLeft < 60 ? "#cc0000" : "#111",
+          }}
         >
-          <div className="text-sm text-muted-foreground mb-2 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium">Passage</span>
+          Time Left :{" "}
+          <span
+            style={{
+              fontFamily: "monospace",
+              fontSize: "14px",
+              color: timeLeft < 60 ? "#cc0000" : "#1a3f7a",
+            }}
+          >
+            {timeStr}
+          </span>
+        </div>
+      </div>
+
+      {/* ═══ PURPLE INFO BAR ═══ */}
+      <div
+        style={{
+          backgroundColor: "#5b5ea6",
+          color: "white",
+          fontSize: "12px",
+          padding: "3px 10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "24px",
+          flexShrink: 0,
+        }}
+      >
+        <span>Keyboard Layout: Inscript</span>
+        <span>Language: {selectedLanguage}</span>
+        {state === "running" && (
+          <span style={{ marginLeft: "auto", opacity: 0.9 }}>
+            WPM: {stats.wpm} &nbsp;| &nbsp; Accuracy: {stats.accuracy}% &nbsp;|
+            &nbsp; Errors: {stats.errors}
+          </span>
+        )}
+      </div>
+
+      {/* ═══ MAIN BODY: 2 COLUMNS ═══ */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        {/* LEFT COLUMN */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            padding: "6px",
+            gap: "5px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Passage box */}
+          <div
+            data-ocid="test.panel"
+            style={{
+              backgroundColor: "white",
+              border: "1px solid #aaa",
+              padding: "10px 12px",
+              flex: 1,
+              overflow: "hidden",
+            }}
+          >
+            <PassageDisplay
+              passage={passage}
+              typed={typed}
+              fontSize={fontSize}
+            />
+          </div>
+
+          {/* Controls bar */}
+          <div
+            style={{
+              backgroundColor: "#d8d8d8",
+              border: "1px solid #aaa",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 8px",
+              fontSize: "12px",
+              flexShrink: 0,
+              flexWrap: "wrap",
+            }}
+          >
+            <span style={{ color: "#333" }}>Duration:</span>
+            <select
+              value={selectedTimeMin}
+              onChange={(e) => {
+                if (state === "idle")
+                  setSelectedTimeMin(Number(e.target.value));
+              }}
+              data-ocid="test.select"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 4px",
+                fontSize: "12px",
+                background: "#f8f8f8",
+              }}
+            >
+              {TIME_PRESETS.map((t) => (
+                <option key={t} value={t}>
+                  {t} Minutes
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (state === "idle") {
+                  const newG = activeGroup > 1 ? activeGroup - 1 : 3;
+                  setActiveGroup(newG);
+                  setTyped("");
+                }
+              }}
+              data-ocid="test.secondary_button"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 8px",
+                background: "#f0f0f0",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
+              {"<<"}
+            </button>
+
+            <span
+              style={{
+                border: "1px solid #999",
+                padding: "1px 8px",
+                background: "#f8f8f8",
+                fontSize: "12px",
+                minWidth: "120px",
+                textAlign: "center",
+              }}
+            >
+              Exercise: {activeGroup}/3
+            </span>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (state === "idle") {
+                  const newG = activeGroup < 3 ? activeGroup + 1 : 1;
+                  setActiveGroup(newG);
+                  setTyped("");
+                }
+              }}
+              data-ocid="test.secondary_button"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 8px",
+                background: "#f0f0f0",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
+              {">>"}
+            </button>
+
+            {/* Backspace toggle */}
+            <button
+              type="button"
+              onClick={() => setBackspaceAllowed((v) => !v)}
+              data-ocid="test.toggle"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 8px",
+                background: backspaceAllowed ? "#d4edda" : "#f8d7da",
+                cursor: "pointer",
+                fontSize: "11px",
+                color: backspaceAllowed ? "#155724" : "#721c24",
+              }}
+            >
+              ⌫ {backspaceAllowed ? "ON" : "OFF"}
+            </button>
+
+            {/* Language selector */}
+            {languageOptions.length > 1 && (
+              <select
+                value={selectedLanguage}
+                onChange={(e) => {
+                  if (state === "idle") setSelectedLanguage(e.target.value);
+                }}
+                data-ocid="test.select"
+                style={{
+                  border: "1px solid #999",
+                  padding: "1px 4px",
+                  fontSize: "12px",
+                  background: "#f8f8f8",
+                }}
+              >
+                {languageOptions.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <div style={{ flex: 1 }} />
+
+            {/* Pause/Resume */}
+            {state === "running" && (
               <button
                 type="button"
-                onClick={() => setHighlightEnabled((v) => !v)}
+                onClick={pauseTest}
                 data-ocid="test.toggle"
-                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border font-medium transition-colors ${
-                  highlightEnabled
-                    ? "border-yellow-400 bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
-                    : "border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"
-                }`}
+                style={{
+                  border: "1px solid #999",
+                  padding: "2px 12px",
+                  background: "#fff3cd",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#856404",
+                }}
               >
-                <Highlighter className="w-3 h-3" />
-                {highlightEnabled ? "ON" : "OFF"}
+                ⏸ Pause
               </button>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setFontSize((s) => Math.max(12, s - 2))}
-                  className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
-                >
-                  A-
-                </button>
-                <span className="text-xs text-muted-foreground w-8 text-center">
-                  {fontSize}px
+            )}
+            {state === "paused" && (
+              <button
+                type="button"
+                onClick={pauseTest}
+                data-ocid="test.toggle"
+                style={{
+                  border: "1px solid #999",
+                  padding: "2px 12px",
+                  background: "#d4edda",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#155724",
+                }}
+              >
+                ▶ Resume
+              </button>
+            )}
+
+            {/* Font size */}
+            <button
+              type="button"
+              onClick={() => setFontSize((s) => Math.min(28, s + 2))}
+              data-ocid="test.toggle"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 6px",
+                background: "#f0f0f0",
+                cursor: "pointer",
+                fontSize: "13px",
+                fontWeight: "bold",
+              }}
+            >
+              A+
+            </button>
+            <button
+              type="button"
+              onClick={() => setFontSize(16)}
+              style={{
+                border: "1px solid #999",
+                padding: "1px 6px",
+                background: "#f0f0f0",
+                cursor: "pointer",
+                fontSize: "13px",
+              }}
+            >
+              A
+            </button>
+            <button
+              type="button"
+              onClick={() => setFontSize((s) => Math.max(12, s - 2))}
+              data-ocid="test.toggle"
+              style={{
+                border: "1px solid #999",
+                padding: "1px 6px",
+                background: "#f0f0f0",
+                cursor: "pointer",
+                fontSize: "11px",
+              }}
+            >
+              A-
+            </button>
+          </div>
+
+          {/* Typing area */}
+          <div
+            style={{
+              backgroundColor: "white",
+              border:
+                state === "paused" ? "2px solid #ff9900" : "1px solid #aaa",
+              flexShrink: 0,
+            }}
+          >
+            {state === "idle" && (
+              <div
+                style={{
+                  padding: "6px 10px",
+                  backgroundColor: "#fffbea",
+                  borderBottom: "1px solid #ddd",
+                  fontSize: "11px",
+                  color: "#666",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>
+                  Click below and start typing — test begins automatically
                 </span>
                 <button
                   type="button"
-                  onClick={() => setFontSize((s) => Math.min(28, s + 2))}
-                  className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs hover:bg-muted transition-colors"
+                  onClick={startTest}
+                  data-ocid="test.primary_button"
+                  style={{
+                    backgroundColor: "#4a90d9",
+                    color: "white",
+                    border: "none",
+                    padding: "3px 16px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    borderRadius: "2px",
+                    fontWeight: "600",
+                  }}
                 >
-                  A+
+                  ▶ Start Test
                 </button>
               </div>
-              <span className="font-mono text-xs">
-                {typed.length} / {passage.length}
-              </span>
-            </div>
+            )}
+            {state === "paused" && (
+              <div
+                style={{
+                  padding: "4px 10px",
+                  backgroundColor: "#fff3cd",
+                  borderBottom: "1px solid #ddd",
+                  fontSize: "11px",
+                  color: "#856404",
+                  textAlign: "center",
+                }}
+              >
+                ⏸ Test Paused — Click Resume to continue
+              </div>
+            )}
+            <textarea
+              ref={textareaRef}
+              value={typed}
+              onChange={handleTyping}
+              onKeyDown={handleKeyDown}
+              disabled={state === "paused" || state === "finished"}
+              placeholder={
+                state === "idle"
+                  ? "Start typing here — timer starts automatically on first keystroke..."
+                  : state === "finished"
+                    ? "Test complete! Calculating results..."
+                    : "Type the passage above here..."
+              }
+              data-ocid="test.editor"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              style={{
+                width: "100%",
+                height: "120px",
+                fontFamily: "monospace",
+                fontSize: "14px",
+                padding: "8px 10px",
+                resize: "none",
+                border: "none",
+                outline: "none",
+                backgroundColor: state === "paused" ? "#fffaed" : "white",
+                color: "#111",
+              }}
+            />
           </div>
-          <PassageDisplay
-            passage={passage}
-            typed={typed}
-            highlightEnabled={highlightEnabled}
-            fontSize={fontSize}
-          />
         </div>
 
-        {/* Textarea */}
-        <div className="bg-white rounded-xl border border-border shadow-card p-4">
-          <textarea
-            ref={textareaRef}
-            value={typed}
-            onChange={handleTyping}
-            onKeyDown={handleKeyDown}
-            disabled={state !== "running"}
-            placeholder={
-              state === "idle"
-                ? "Click 'Start Test' below to begin typing..."
-                : state === "finished"
-                  ? "Test complete!"
-                  : "Start typing here..."
-            }
-            className="w-full h-28 font-mono text-sm resize-none border border-input rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-ring bg-muted/30 disabled:opacity-60 disabled:cursor-not-allowed"
-            data-ocid="test.editor"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
-          {!backspaceAllowed && state === "running" && (
-            <p className="text-xs text-red-500 mt-1">
-              ⚠ Backspace is disabled for this test
-            </p>
-          )}
-        </div>
+        {/* RIGHT PANEL — Candidate Profile */}
+        <div
+          style={{
+            width: "220px",
+            flexShrink: 0,
+            borderLeft: "1px solid #bbb",
+            backgroundColor: "#ececec",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "auto",
+          }}
+        >
+          {/* Blue header */}
+          <div
+            style={{
+              backgroundColor: "#4a90d9",
+              color: "white",
+              fontSize: "11px",
+              fontWeight: "bold",
+              padding: "5px 8px",
+              textAlign: "center",
+              letterSpacing: "0.5px",
+            }}
+          >
+            CANDIDATE PROFILE &amp; LOGIN
+          </div>
 
-        {/* Settings (idle only) */}
-        {state === "idle" && (
-          <div className="bg-white rounded-xl border border-border shadow-card p-5 space-y-4">
-            <h3 className="font-poppins font-semibold text-navy text-sm">
-              Test Settings
-            </h3>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "12px 10px",
+              gap: "10px",
+            }}
+          >
+            {/* Avatar */}
+            <div
+              style={{
+                width: "90px",
+                height: "90px",
+                borderRadius: "50%",
+                backgroundColor: "#c8d8e8",
+                border: "2px solid #9ab",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              <User size={44} color="#6080a0" />
+            </div>
 
-            {/* Language selector — show if exam supports multiple languages */}
-            {languageOptions.length > 1 && (
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-2">
-                  Language / भाषा
-                </p>
-                <div className="flex gap-2">
-                  {languageOptions.map((lang) => (
-                    <button
-                      key={lang}
-                      type="button"
-                      onClick={() => setSelectedLanguage(lang)}
-                      data-ocid="test.toggle"
-                      className={`px-5 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-                        selectedLanguage === lang
-                          ? "bg-navy text-white border-navy"
-                          : "bg-white text-navy border-navy/30 hover:bg-navy/5"
-                      }`}
-                    >
-                      {lang === "Hindi" ? "हिंदी (Hindi)" : "English"}
-                    </button>
-                  ))}
+            {isLoggedIn && auth?.username ? (
+              /* Logged in state */
+              <div style={{ width: "100%", fontSize: "12px" }}>
+                <div
+                  style={{
+                    backgroundColor: "#f8f8f8",
+                    border: "1px solid #ccc",
+                    padding: "4px 8px",
+                    marginBottom: "6px",
+                    borderRadius: "2px",
+                    fontFamily: "monospace",
+                    fontSize: "12px",
+                    color: "#222",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#666",
+                      fontSize: "10px",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    User ID:
+                  </div>
+                  {auth.username}
+                </div>
+                <button
+                  type="button"
+                  onClick={startTest}
+                  disabled={state !== "idle"}
+                  data-ocid="test.primary_button"
+                  style={{
+                    width: "100%",
+                    backgroundColor: state === "idle" ? "#4a90d9" : "#aaa",
+                    color: "white",
+                    border: "none",
+                    padding: "5px",
+                    fontSize: "12px",
+                    cursor: state === "idle" ? "pointer" : "default",
+                    borderRadius: "2px",
+                    fontWeight: "600",
+                    marginBottom: "6px",
+                  }}
+                >
+                  {state === "idle"
+                    ? "▶ Start Test"
+                    : state === "running"
+                      ? "● Running..."
+                      : state === "paused"
+                        ? "⏸ Paused"
+                        : "✓ Finished"}
+                </button>
+              </div>
+            ) : (
+              /* Not logged in — login form */
+              <div style={{ width: "100%", fontSize: "12px" }}>
+                <div style={{ marginBottom: "6px" }}>
+                  <label
+                    htmlFor="login-userid"
+                    style={{
+                      display: "block",
+                      fontSize: "11px",
+                      color: "#555",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    User ID:
+                  </label>
+                  <input
+                    id="login-userid"
+                    type="text"
+                    value={loginUserId}
+                    onChange={(e) => setLoginUserId(e.target.value)}
+                    data-ocid="test.input"
+                    placeholder="Enter User ID"
+                    style={{
+                      width: "100%",
+                      border: "1px solid #bbb",
+                      padding: "3px 6px",
+                      fontSize: "12px",
+                      fontFamily: "monospace",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: "8px" }}>
+                  <label
+                    htmlFor="login-password"
+                    style={{
+                      display: "block",
+                      fontSize: "11px",
+                      color: "#555",
+                      marginBottom: "2px",
+                    }}
+                  >
+                    Password:
+                  </label>
+                  <input
+                    id="login-password"
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    data-ocid="test.input"
+                    placeholder="••••••••"
+                    style={{
+                      width: "100%",
+                      border: "1px solid #bbb",
+                      padding: "3px 6px",
+                      fontSize: "12px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <Link to="/login">
+                  <button
+                    type="button"
+                    data-ocid="test.primary_button"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#4a90d9",
+                      color: "white",
+                      border: "none",
+                      padding: "5px",
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      borderRadius: "3px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Log in
+                  </button>
+                </Link>
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    fontSize: "11px",
+                    color: "#4a90d9",
+                    textDecoration: "none",
+                  }}
+                  data-ocid="test.link"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div
+              style={{
+                width: "100%",
+                borderTop: "1px solid #ccc",
+                paddingTop: "8px",
+                fontSize: "11px",
+                color: "#555",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "3px",
+                }}
+              >
+                <span>Required WPM:</span>
+                <span style={{ fontWeight: "bold", color: "#1a3f7a" }}>
+                  {exam.requiredWPM > 0 ? exam.requiredWPM : "KDPH"}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "3px",
+                }}
+              >
+                <span>Min Accuracy:</span>
+                <span style={{ fontWeight: "bold", color: "#1a3f7a" }}>
+                  {exam.accuracy}%
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>Duration:</span>
+                <span style={{ fontWeight: "bold", color: "#1a3f7a" }}>
+                  {selectedTimeMin} min
+                </span>
+              </div>
+            </div>
+
+            {/* Live stats during test */}
+            {(state === "running" || state === "paused") && (
+              <div
+                data-ocid="test.loading_state"
+                style={{
+                  width: "100%",
+                  borderTop: "1px solid #ccc",
+                  paddingTop: "8px",
+                  fontSize: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <span style={{ color: "#555" }}>WPM:</span>
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      color:
+                        stats.wpm >= exam.requiredWPM ? "#1a7f1a" : "#cc2200",
+                      fontFamily: "monospace",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {stats.wpm}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "4px",
+                  }}
+                >
+                  <span style={{ color: "#555" }}>Accuracy:</span>
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      color:
+                        stats.accuracy >= exam.accuracy ? "#1a7f1a" : "#cc2200",
+                      fontFamily: "monospace",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {stats.accuracy}%
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <span style={{ color: "#555" }}>Errors:</span>
+                  <span
+                    style={{
+                      fontWeight: "bold",
+                      color: stats.errors > 0 ? "#cc2200" : "#1a7f1a",
+                      fontFamily: "monospace",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {stats.errors}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div
+                  style={{
+                    marginTop: "8px",
+                    backgroundColor: "#ddd",
+                    height: "6px",
+                    borderRadius: "3px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${Math.min(100, (typed.length / passage.length) * 100)}%`,
+                      backgroundColor: "#4a90d9",
+                      transition: "width 0.3s",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    textAlign: "right",
+                    fontSize: "10px",
+                    color: "#888",
+                    marginTop: "2px",
+                  }}
+                >
+                  {typed.length}/{passage.length} chars
                 </div>
               </div>
             )}
 
-            <div>
-              <p className="text-xs text-muted-foreground font-medium mb-2">
-                Time Limit
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {TIME_PRESETS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setSelectedTimeMin(t)}
-                    data-ocid="test.toggle"
-                    className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-                      selectedTimeMin === t
-                        ? "bg-navy text-white border-navy"
-                        : "bg-white text-navy border-navy/30 hover:bg-navy/5"
-                    }`}
-                  >
-                    {t} min
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium mb-2">
-                Paragraph Length:{" "}
-                <span className="text-navy font-bold">
-                  {paragraphWords} words
-                </span>
-              </p>
-              <Slider
-                min={250}
-                max={2000}
-                step={50}
-                value={[paragraphWords]}
-                onValueChange={([val]) => setParagraphWords(val)}
-                className="w-full"
-                data-ocid="test.toggle"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>250</span>
-                <span>2000</span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium mb-2">
-                Backspace
-              </p>
+            {/* Exercise navigation arrows */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "8px",
+                marginTop: "4px",
+              }}
+            >
               <button
                 type="button"
-                onClick={() => setBackspaceAllowed((v) => !v)}
-                data-ocid="test.toggle"
-                className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-                  backspaceAllowed
-                    ? "bg-green-50 text-green-700 border-green-300 hover:bg-green-100"
-                    : "bg-red-50 text-red-700 border-red-300 hover:bg-red-100"
-                }`}
+                onClick={() => {
+                  if (state === "idle") {
+                    const newG = activeGroup > 1 ? activeGroup - 1 : 3;
+                    setActiveGroup(newG);
+                    setTyped("");
+                  }
+                }}
+                data-ocid="test.secondary_button"
+                style={{
+                  border: "1px solid #aaa",
+                  background: "#f0f0f0",
+                  padding: "3px 8px",
+                  cursor: state === "idle" ? "pointer" : "not-allowed",
+                  opacity: state === "idle" ? 1 : 0.4,
+                }}
+                title="Previous exercise"
               >
-                {backspaceAllowed
-                  ? "Backspace: Allowed ✓"
-                  : "Backspace: Disabled ✗"}
+                <ChevronLeft size={14} />
+              </button>
+              <span
+                style={{ fontSize: "11px", alignSelf: "center", color: "#555" }}
+              >
+                {activeGroup}/3
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (state === "idle") {
+                    const newG = activeGroup < 3 ? activeGroup + 1 : 1;
+                    setActiveGroup(newG);
+                    setTyped("");
+                  }
+                }}
+                data-ocid="test.secondary_button"
+                style={{
+                  border: "1px solid #aaa",
+                  background: "#f0f0f0",
+                  padding: "3px 8px",
+                  cursor: state === "idle" ? "pointer" : "not-allowed",
+                  opacity: state === "idle" ? 1 : 0.4,
+                }}
+                title="Next exercise"
+              >
+                <ChevronRight size={14} />
               </button>
             </div>
-            <div className="pt-1 flex flex-wrap items-center justify-center gap-4">
-              <Button
-                size="lg"
-                onClick={startTest}
-                className="bg-blue-brand hover:bg-blue-brand-light text-white font-semibold px-10 rounded-full shadow-lg"
-                data-ocid="test.primary_button"
-              >
-                <Play className="w-5 h-5 mr-2" /> Start Test
-              </Button>
-              <Link to="/live">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-red-300 text-red-600 hover:bg-red-50 font-semibold px-8 rounded-full gap-2"
-                  data-ocid="test.secondary_button"
-                >
-                  <Radio className="w-4 h-4" /> Live Test
-                </Button>
-              </Link>
-            </div>
-            <p className="text-xs text-muted-foreground text-center">
-              Timer begins when you click Start. You have {selectedTimeMin}{" "}
-              {selectedTimeMin === 1 ? "minute" : "minutes"}.
-            </p>
           </div>
-        )}
-
-        {state === "running" && (
-          <div className="bg-white rounded-xl border border-border shadow-card p-3">
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <span>⏱ {selectedTimeMin} min</span>
-              <span>📝 {paragraphWords} words</span>
-              <span>🌐 {selectedLanguage}</span>
-              <span>
-                {backspaceAllowed ? "⌫ Backspace: On" : "⚡ Backspace: Off"}
-              </span>
-              {isLoggedIn && <span>💾 Auto-saving</span>}
-            </div>
-          </div>
-        )}
-
-        {state === "finished" && (
-          <div className="text-center" data-ocid="test.success_state">
-            <p className="text-muted-foreground mb-4">
-              Calculating your results...
-            </p>
-          </div>
-        )}
+        </div>
       </div>
-    </main>
+
+      {/* ═══ FOOTER ═══ */}
+      <div
+        style={{
+          backgroundColor: "#d0d0d0",
+          borderTop: "1px solid #bbb",
+          textAlign: "center",
+          fontSize: "11px",
+          padding: "3px 8px",
+          color: "#444",
+          flexShrink: 0,
+        }}
+      >
+        SSC Digital Examination Module : Powered by{" "}
+        <strong>Karwashra Typing Exam</strong>
+      </div>
+    </div>
   );
 }
