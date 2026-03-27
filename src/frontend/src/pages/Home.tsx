@@ -137,92 +137,48 @@ const ROW2 = [
   },
 ];
 
-const GAMING_LEFT = [
-  {
-    id: "esports-officials",
-    label: "eSports Officials",
-    sub: "Gaming Federation",
-    color: "linear-gradient(135deg,#1565c0,#0d47a1)",
-    icon: "🎮",
-  },
-  {
-    id: "competitive-gaming-league",
-    label: "Competitive Gaming League",
-    sub: "CGL Gaming Board",
-    color: "linear-gradient(135deg,#1a3a8c,#283593)",
-    icon: "🏆",
-  },
-];
-
-const GAMING_RIGHT = [
-  {
-    id: "gaming-ethics-law",
-    label: "Gaming Ethics & Law",
-    sub: "Regulatory Board",
-    color: "linear-gradient(135deg,#37474f,#263238)",
-    icon: "⚖️",
-  },
-  {
-    id: "gaming-strategy",
-    label: "Gaming Strategy",
-    sub: "Strategy Board",
-    color: "linear-gradient(135deg,#4a148c,#311b92)",
-    icon: "♟️",
-  },
-];
-
 function ExamTile({
   label,
   abbr,
   color,
   domain,
-  onClick,
+  onTyping,
+  onMCQ,
 }: {
   label: string;
   abbr: string;
   color: string;
   domain: string;
-  onClick: () => void;
+  onTyping: () => void;
+  onMCQ: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-ocid={`home.${abbr.toLowerCase()}.button`}
+    <div
       style={{
         background: "#fff",
         border: "1px solid #dde3ef",
-        borderRadius: 6,
-        padding: "8px 4px",
-        cursor: "pointer",
+        borderRadius: 8,
+        padding: "10px 6px 8px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 5,
-        transition: "box-shadow 0.15s, transform 0.1s",
+        gap: 6,
         minWidth: 0,
-      }}
-      onMouseEnter={(e) => {
-        const b = e.currentTarget as HTMLButtonElement;
-        b.style.boxShadow = "0 4px 12px rgba(26,58,140,0.18)";
-        b.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        const b = e.currentTarget as HTMLButtonElement;
-        b.style.boxShadow = "none";
-        b.style.transform = "none";
+        boxShadow: "0 1px 4px rgba(26,58,140,0.07)",
       }}
     >
+      {/* Icon */}
       <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 8,
+          width: 44,
+          height: 44,
+          borderRadius: 10,
           background: color,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.22)",
+          flexShrink: 0,
         }}
       >
         <img
@@ -231,13 +187,14 @@ function ExamTile({
           style={{ width: 22, height: 22 }}
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
-            (e.target as HTMLImageElement)
-              .parentElement!.querySelector(".abbr-fallback")!
-              .setAttribute("style", "display:block");
+            const fb = (
+              e.target as HTMLImageElement
+            ).parentElement!.querySelector(".abbr-fb");
+            if (fb) (fb as HTMLElement).style.display = "block";
           }}
         />
         <span
-          className="abbr-fallback"
+          className="abbr-fb"
           style={{
             display: "none",
             color: "#fff",
@@ -248,73 +205,89 @@ function ExamTile({
           {abbr}
         </span>
       </div>
+
+      {/* Label */}
       <span
         style={{
           fontSize: 10,
           color: "#1a2a6c",
-          fontWeight: 600,
+          fontWeight: 700,
           textAlign: "center",
           lineHeight: 1.2,
           padding: "0 2px",
+          minHeight: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         {label}
       </span>
-    </button>
-  );
-}
 
-function GamingCard({
-  item,
-  onClick,
-}: { item: (typeof GAMING_LEFT)[0]; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-ocid={`home.gaming.${item.id}.button`}
-      style={{
-        background: item.color,
-        border: "none",
-        borderRadius: 10,
-        padding: "14px 10px",
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 6,
-        color: "#fff",
-        flex: 1,
-        transition: "filter 0.15s, transform 0.1s",
-        minHeight: 90,
-        justifyContent: "center",
-      }}
-      onMouseEnter={(e) => {
-        const b = e.currentTarget as HTMLButtonElement;
-        b.style.filter = "brightness(1.15)";
-        b.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        const b = e.currentTarget as HTMLButtonElement;
-        b.style.filter = "none";
-        b.style.transform = "none";
-      }}
-    >
-      <span style={{ fontSize: 24 }}>{item.icon}</span>
-      <span
-        style={{
-          fontSize: 11,
-          fontWeight: 700,
-          textAlign: "center",
-          lineHeight: 1.3,
-        }}
-      >
-        {item.label}
-      </span>
-      <span style={{ fontSize: 9, opacity: 0.8, textAlign: "center" }}>
-        {item.sub}
-      </span>
-    </button>
+      {/* Action Buttons */}
+      <div style={{ display: "flex", gap: 4, width: "100%" }}>
+        <button
+          type="button"
+          data-ocid={`home.${abbr.toLowerCase()}.typing.button`}
+          onClick={onTyping}
+          style={{
+            flex: 1,
+            background: color,
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            padding: "4px 2px",
+            fontSize: 8.5,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            lineHeight: 1.2,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.filter =
+              "brightness(1.15)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.filter = "none";
+          }}
+        >
+          ⌨️ Typing
+        </button>
+        <button
+          type="button"
+          data-ocid={`home.${abbr.toLowerCase()}.mcq.button`}
+          onClick={onMCQ}
+          style={{
+            flex: 1,
+            background: "#f57f17",
+            color: "#fff",
+            border: "none",
+            borderRadius: 4,
+            padding: "4px 2px",
+            fontSize: 8.5,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            lineHeight: 1.2,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.filter =
+              "brightness(1.15)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.filter = "none";
+          }}
+        >
+          📝 MCQ
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -322,6 +295,10 @@ export function Home() {
   const navigate = useNavigate();
   const { isLoggedIn, username, logout } = useAuth();
   const [activeLang, setActiveLang] = useState("all");
+
+  const handleMCQ = (examId: string) => {
+    navigate({ to: `/exam/${examId}/test` as "/" });
+  };
 
   return (
     <div
@@ -570,15 +547,7 @@ export function Home() {
           >
             Speed up your typing &amp; Crack all Govt. &amp; State Exams!
           </p>
-
-          {/* Hero center content */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
-            {/* Center */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
             <div
               style={{
                 flex: 1,
@@ -606,7 +575,6 @@ export function Home() {
                   (e.target as HTMLImageElement).src = "";
                 }}
               />
-              {/* 4 Action Buttons */}
               <div
                 style={{
                   display: "grid",
@@ -615,135 +583,71 @@ export function Home() {
                   width: "100%",
                 }}
               >
-                <button
-                  type="button"
-                  data-ocid="home.live_test.primary_button"
-                  onClick={() => navigate({ to: "/live-test" })}
-                  style={{
-                    background: "linear-gradient(135deg,#d32f2f,#b71c1c)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "12px 8px",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    boxShadow: "0 3px 8px rgba(211,47,47,0.4)",
-                    transition: "filter 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "brightness(1.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "none";
-                  }}
-                >
-                  <span>⏱</span> Live Test
-                </button>
-                <button
-                  type="button"
-                  data-ocid="home.practice.primary_button"
-                  onClick={() => navigate({ to: "/practice" })}
-                  style={{
-                    background: "linear-gradient(135deg,#1565c0,#0d47a1)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "12px 8px",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    boxShadow: "0 3px 8px rgba(21,101,192,0.4)",
-                    transition: "filter 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "brightness(1.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "none";
-                  }}
-                >
-                  <span>⌨️</span> Typing Practice
-                </button>
-                <button
-                  type="button"
-                  data-ocid="home.mock_test.primary_button"
-                  onClick={() => navigate({ to: "/mock-test" })}
-                  style={{
-                    background: "linear-gradient(135deg,#e65100,#bf360c)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "12px 8px",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    boxShadow: "0 3px 8px rgba(230,81,0,0.4)",
-                    transition: "filter 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "brightness(1.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "none";
-                  }}
-                >
-                  <span>📋</span> Mock Test
-                </button>
-                <button
-                  type="button"
-                  data-ocid="home.learning.primary_button"
-                  onClick={() => navigate({ to: "/learning" })}
-                  style={{
-                    background: "linear-gradient(135deg,#00695c,#004d40)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "12px 8px",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    boxShadow: "0 3px 8px rgba(0,105,92,0.4)",
-                    transition: "filter 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "brightness(1.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.filter =
-                      "none";
-                  }}
-                >
-                  <span>🎓</span> Learning Typing
-                </button>
+                {[
+                  {
+                    label: "⏱ Live Test",
+                    to: "/live-test",
+                    bg: "linear-gradient(135deg,#d32f2f,#b71c1c)",
+                    shadow: "rgba(211,47,47,0.4)",
+                  },
+                  {
+                    label: "⌨️ Typing Practice",
+                    to: "/practice",
+                    bg: "linear-gradient(135deg,#1565c0,#0d47a1)",
+                    shadow: "rgba(21,101,192,0.4)",
+                  },
+                  {
+                    label: "📋 Mock Test",
+                    to: "/mock-test",
+                    bg: "linear-gradient(135deg,#e65100,#bf360c)",
+                    shadow: "rgba(230,81,0,0.4)",
+                  },
+                  {
+                    label: "🎓 Learning Typing",
+                    to: "/learning",
+                    bg: "linear-gradient(135deg,#00695c,#004d40)",
+                    shadow: "rgba(0,105,92,0.4)",
+                  },
+                ].map((btn) => (
+                  <button
+                    key={btn.to}
+                    type="button"
+                    data-ocid={`home.${btn.to.replace("/", "")}.primary_button`}
+                    onClick={() => navigate({ to: btn.to as "/" })}
+                    style={{
+                      background: btn.bg,
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "12px 8px",
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      boxShadow: `0 3px 8px ${btn.shadow}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.filter =
+                        "brightness(1.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.filter =
+                        "none";
+                    }}
+                  >
+                    {btn.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* EXAM SECTION */}
       <section
         style={{ background: "#fff", margin: "12px 0", padding: "16px" }}
       >
@@ -774,7 +678,7 @@ export function Home() {
                 textAlign: "center",
               }}
             >
-              Prepare for All Competitive and Gaming Exams
+              ⌨️ Typing Exam &amp; MCQ Test — Select Your Exam
             </h2>
             <div
               style={{
@@ -785,271 +689,100 @@ export function Home() {
             />
           </div>
 
+          {/* Legend */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: 16,
+              marginBottom: 12,
+            }}
+          >
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                color: "#444",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  background: "#1a3a8c",
+                  color: "#fff",
+                  borderRadius: 4,
+                  padding: "2px 8px",
+                  fontSize: 10,
+                }}
+              >
+                ⌨️ Typing
+              </span>
+              — Typing Speed Test
+            </span>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 11,
+                color: "#444",
+                fontWeight: 600,
+              }}
+            >
+              <span
+                style={{
+                  background: "#f57f17",
+                  color: "#fff",
+                  borderRadius: 4,
+                  padding: "2px 8px",
+                  fontSize: 10,
+                }}
+              >
+                📝 MCQ
+              </span>
+              — MCQ / Objective Test
+            </span>
+          </div>
+
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(12, 1fr)",
-              gap: 6,
-              marginBottom: 6,
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 8,
+              marginBottom: 8,
             }}
           >
             {ROW1.map((tile) => (
               <ExamTile
                 key={tile.label}
                 {...tile}
-                onClick={() => navigate({ to: tile.path as "/" })}
+                onTyping={() => navigate({ to: tile.path as "/" })}
+                onMCQ={() => handleMCQ(`${tile.abbr.toLowerCase()}-mcq`)}
               />
             ))}
           </div>
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(12, 1fr)",
-              gap: 6,
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 8,
             }}
           >
             {ROW2.map((tile) => (
               <ExamTile
                 key={tile.label}
                 {...tile}
-                onClick={() => navigate({ to: tile.path as "/" })}
+                onTyping={() => navigate({ to: tile.path as "/" })}
+                onMCQ={() => handleMCQ(`${tile.abbr.toLowerCase()}-mcq`)}
               />
             ))}
           </div>
         </div>
       </section>
-      <section
-        style={{ background: "#f0f4ff", margin: "12px 0", padding: "16px" }}
-      >
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 14,
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                height: 2,
-                background: "linear-gradient(90deg,transparent,#7b1fa2)",
-              }}
-            />
-            <h2
-              style={{
-                color: "#7b1fa2",
-                fontStyle: "italic",
-                fontWeight: 800,
-                fontSize: 15,
-                margin: 0,
-                whiteSpace: "nowrap",
-                textAlign: "center",
-              }}
-            >
-              🎮 Gaming Typing Section
-            </h2>
-            <div
-              style={{
-                flex: 1,
-                height: 2,
-                background: "linear-gradient(90deg,#7b1fa2,transparent)",
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 12,
-            }}
-          >
-            {[...GAMING_LEFT, ...GAMING_RIGHT].map((item) => (
-              <GamingCard
-                key={item.id}
-                item={item}
-                onClick={() => navigate({ to: `/exam/${item.id}/test` })}
-              />
-            ))}
-          </div>
-          {/* Popular Typing Games */}
-          <div style={{ marginTop: 20 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 12,
-              }}
-            >
-              <div
-                style={{
-                  flex: 1,
-                  height: 2,
-                  background: "linear-gradient(90deg,transparent,#e91e63)",
-                }}
-              />
-              <h3
-                style={{
-                  color: "#e91e63",
-                  fontStyle: "italic",
-                  fontWeight: 800,
-                  fontSize: 14,
-                  margin: 0,
-                  whiteSpace: "nowrap",
-                  textAlign: "center",
-                }}
-              >
-                🕹️ Popular Typing Games
-              </h3>
-              <div
-                style={{
-                  flex: 1,
-                  height: 2,
-                  background: "linear-gradient(90deg,#e91e63,transparent)",
-                }}
-              />
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: 10,
-              }}
-            >
-              {[
-                {
-                  name: "TypingClub",
-                  url: "https://www.typingclub.com",
-                  icon: "🎯",
-                  color: "#1565c0",
-                  desc: "Free Typing Lessons",
-                },
-                {
-                  name: "Nitro Type",
-                  url: "https://www.nitrotype.com",
-                  icon: "🏎️",
-                  color: "#e53935",
-                  desc: "Racing Typing Game",
-                },
-                {
-                  name: "Keybr",
-                  url: "https://www.keybr.com",
-                  icon: "⌨️",
-                  color: "#2e7d32",
-                  desc: "Speed Trainer",
-                },
-                {
-                  name: "ZType",
-                  url: "https://zty.pe",
-                  icon: "🚀",
-                  color: "#6a1b9a",
-                  desc: "Space Shooter",
-                },
-                {
-                  name: "Typing.com",
-                  url: "https://www.typing.com",
-                  icon: "💻",
-                  color: "#00838f",
-                  desc: "Learn & Practice",
-                },
-                {
-                  name: "10FastFingers",
-                  url: "https://10fastfingers.com",
-                  icon: "⚡",
-                  color: "#ef6c00",
-                  desc: "Speed Test",
-                },
-                {
-                  name: "TypeRacer",
-                  url: "https://typeracer.com",
-                  icon: "🏁",
-                  color: "#558b2f",
-                  desc: "Race Others Live",
-                },
-                {
-                  name: "Typing Attack",
-                  url: "https://www.typingattack.com",
-                  icon: "🎮",
-                  color: "#c62828",
-                  desc: "Typing Shooter",
-                },
-              ].map((game) => (
-                <a
-                  key={game.name}
-                  href={game.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: game.color,
-                    borderRadius: 10,
-                    padding: "12px 8px",
-                    textDecoration: "none",
-                    color: "#fff",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-                    cursor: "pointer",
-                    transition: "transform 0.15s, box-shadow 0.15s",
-                    minHeight: 80,
-                  }}
-                  onMouseOver={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "scale(1.05)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 4px 16px rgba(0,0,0,0.35)";
-                  }}
-                  onFocus={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "scale(1.05)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 4px 16px rgba(0,0,0,0.35)";
-                  }}
-                  onMouseOut={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "scale(1)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 2px 8px rgba(0,0,0,0.2)";
-                  }}
-                  onBlur={(e) => {
-                    (e.currentTarget as HTMLElement).style.transform =
-                      "scale(1)";
-                    (e.currentTarget as HTMLElement).style.boxShadow =
-                      "0 2px 8px rgba(0,0,0,0.2)";
-                  }}
-                >
-                  <span style={{ fontSize: 24, marginBottom: 4 }}>
-                    {game.icon}
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: 700,
-                      fontSize: 11,
-                      textAlign: "center",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {game.name}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 9,
-                      opacity: 0.85,
-                      marginTop: 2,
-                      textAlign: "center",
-                    }}
-                  >
-                    {game.desc}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+
+      {/* FOOTER */}
       <footer
         style={{
           background: "linear-gradient(135deg,#1a3a8c 0%,#0d2060 100%)",
@@ -1057,7 +790,6 @@ export function Home() {
           textAlign: "center",
         }}
       >
-        {/* Social Icons */}
         <div
           style={{
             display: "flex",
@@ -1078,10 +810,7 @@ export function Home() {
                 width: 40,
                 height: 40,
                 borderRadius: "50%",
-                background:
-                  typeof s.bg === "string" && s.bg.startsWith("linear")
-                    ? s.bg
-                    : s.bg,
+                background: s.bg,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -1134,8 +863,6 @@ export function Home() {
             ✉️
           </a>
         </div>
-
-        {/* Footer Links */}
         <div
           style={{
             display: "flex",
@@ -1154,7 +881,13 @@ export function Home() {
             <button
               key={link}
               type="button"
-              style={{ color: "#a8c4ff", fontSize: 11, textDecoration: "none" }}
+              style={{
+                color: "#a8c4ff",
+                fontSize: 11,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = "#fff";
               }}
@@ -1166,7 +899,6 @@ export function Home() {
             </button>
           ))}
         </div>
-
         <div style={{ color: "#6080b0", fontSize: 11 }}>
           © 2028 Karwashra Typing. All Rights Reserved. · Built with ❤️ using{" "}
           <a
