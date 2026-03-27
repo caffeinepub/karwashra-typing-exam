@@ -1,27 +1,34 @@
 # Karwashra Typing Exam
 
 ## Current State
-- `src/frontend/src/data/exams.ts` contains `PASSAGES` object with `english` (20 paragraphs) and `hindi` (several paragraphs) arrays used for all exam typing tests.
-- `generatePassageOfLength` function picks random passages from these arrays and concatenates/repeats to fill requested length.
-- Home page (`Home.tsx`) has gaming section cards (GAMING_LEFT, GAMING_RIGHT) displayed in the hero 3-column layout — gaming cards are on the left and right columns with the main CTA in the center. Gaming cards appear in the upper portion of the page.
-- Exam grid (ROW1, ROW2) showing 14 exams is below the hero section.
+App has exam tiles with MCQ buttons but clicking them navigates to typing test. No actual MCQ functionality exists yet.
 
 ## Requested Changes (Diff)
 
 ### Add
-- 20+ additional high-quality English paragraphs to PASSAGES.english array in exams.ts — government/exam/India/Haryana themed, 300-500 words each, matching style of existing paragraphs
-- 10+ additional Hindi paragraphs to PASSAGES.hindi array — government/Haryana themed in Devanagari
-- Also add exam-specific passage pools for key exams: SSC, HARTRON/Haryon, Delhi Police, DSSSB, Railway, Banking, DEO, PCS, Teaching, Clerk
+- New `/mcq` route and `MCQTestPage.tsx` with full MCQ functionality
+- Question bank: 20+ questions per part per exam, bilingual (Hindi+English) where applicable
+- Each question has 4 options (a, b, c, d)
+- Parts structure per exam:
+  - SSC CGL/CHSL/MTS, Delhi Police HCM, DSSSB: Part A=Reasoning, Part B=Maths, Part C=GK/GS, Part D=English+Computer
+  - Railway NTPC: Part A=Reasoning, Part B=Maths, Part C=GK (no Hindi/English)
+  - Banking: Part A=Reasoning, Part B=Quant/DI, Part C=English, Part D=Computer+Banking Awareness
+  - State Level/PCS: Part A=GK/GS, Part B=Reasoning, Part C=Maths, Part D=Hindi
+  - Teaching (CTET): Part A=Pedagogy+Child Dev, Part B=Reasoning+GK, Part C=Subject Specific, Part D=Hindi/English
+  - DEO/Clerk/Harton: Part A=Computer Basics, Part B=Reasoning, Part C=Maths, Part D=Hindi
+- Language: Reasoning/Maths/GK = Bilingual; English section = Only English; Hindi section = Only Hindi
+- Timer per part (20 minutes), score display after each part and final result
+- MCQ buttons on Home page navigate to `/mcq?exam=EXAMID`
 
 ### Modify
-- Home.tsx: Move gaming section cards BELOW the exam grid tiles section. Currently gaming cards are in the hero 3-column area (top). They should appear as a separate section underneath the exam grid/tiles.
-- `getPassagesForExam` function: ensure each exam returns a larger pool (20+ relevant passages)
+- `App.tsx`: Add `/mcq` route pointing to MCQTestPage
+- `Home.tsx`: Update `handleMCQ` to navigate to `/mcq?exam=...`
 
 ### Remove
-- Nothing to remove
+- Nothing removed
 
 ## Implementation Plan
-1. In `exams.ts`, add 20+ new English paragraphs to PASSAGES.english
-2. Add 10+ new Hindi paragraphs to PASSAGES.hindi
-3. Add exam-specific passage arrays for key exams and update `getPassagesForExam` to use them
-4. In `Home.tsx`, restructure layout: remove gaming cards from the hero 3-column area, add a "Gaming Section" card grid below the exam tiles section
+1. Create `src/frontend/src/data/mcqQuestions.ts` with full question bank
+2. Create `src/frontend/src/pages/MCQTestPage.tsx` with part selector, question UI, timer, score
+3. Update `App.tsx` to add mcq route
+4. Update `Home.tsx` handleMCQ function

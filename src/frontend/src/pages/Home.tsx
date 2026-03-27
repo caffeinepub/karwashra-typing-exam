@@ -297,7 +297,9 @@ export function Home() {
   const [activeLang, setActiveLang] = useState("all");
 
   const handleMCQ = (examId: string) => {
-    navigate({ to: `/exam/${examId}/test` as "/" });
+    // Remove -mcq suffix if present
+    const cleanId = examId.replace(/-mcq$/, "");
+    navigate({ to: "/mcq" as "/", search: { exam: cleanId } });
   };
 
   return (

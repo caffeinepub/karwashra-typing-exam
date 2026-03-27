@@ -13,6 +13,7 @@ import { LiveHub } from "@/pages/LiveHub";
 import { LiveTestPage } from "@/pages/LiveTestPage";
 import { LiveTestRoom } from "@/pages/LiveTestRoom";
 import { Login } from "@/pages/Login";
+import { MCQTestPage } from "@/pages/MCQTestPage";
 import { MockTestPage } from "@/pages/MockTestPage";
 import { PracticePage } from "@/pages/PracticePage";
 import { Results } from "@/pages/Results";
@@ -37,7 +38,8 @@ function RootLayout() {
     pathname === "/live-test" ||
     pathname === "/practice" ||
     pathname === "/learning" ||
-    pathname === "/mock-test";
+    pathname === "/mock-test" ||
+    pathname === "/mcq";
 
   if (isHome) {
     return (
@@ -137,7 +139,6 @@ const liveRoomRoute = createRoute({
   path: "/live/$roomId",
   component: LiveTestRoom,
 });
-
 const liveTestRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/live-test",
@@ -158,6 +159,14 @@ const mockTestRoute = createRoute({
   path: "/mock-test",
   component: MockTestPage,
 });
+const mcqRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/mcq",
+  component: MCQTestPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    exam: search.exam as string | undefined,
+  }),
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
@@ -177,6 +186,7 @@ const routeTree = rootRoute.addChildren([
   practiceRoute,
   learningRoute,
   mockTestRoute,
+  mcqRoute,
 ]);
 
 const router = createRouter({ routeTree });
