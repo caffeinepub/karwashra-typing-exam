@@ -571,39 +571,18 @@ export function Home() {
             Speed up your typing &amp; Crack all Govt. &amp; State Exams!
           </p>
 
-          {/* Hero 3-column: gaming left, center, gaming right */}
+          {/* Hero center content */}
           <div
             style={{
               display: "flex",
-              gap: 12,
-              alignItems: "stretch",
               justifyContent: "center",
             }}
           >
-            {/* Gaming Left */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                width: 130,
-                flexShrink: 0,
-              }}
-            >
-              {GAMING_LEFT.map((item) => (
-                <GamingCard
-                  key={item.id}
-                  item={item}
-                  onClick={() => navigate({ to: `/exam/${item.id}/test` })}
-                />
-              ))}
-            </div>
-
             {/* Center */}
             <div
               style={{
                 flex: 1,
-                maxWidth: 560,
+                maxWidth: 600,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -762,30 +741,9 @@ export function Home() {
                 </button>
               </div>
             </div>
-
-            {/* Gaming Right */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                width: 130,
-                flexShrink: 0,
-              }}
-            >
-              {GAMING_RIGHT.map((item) => (
-                <GamingCard
-                  key={item.id}
-                  item={item}
-                  onClick={() => navigate({ to: `/exam/${item.id}/test` })}
-                />
-              ))}
-            </div>
           </div>
         </div>
       </section>
-
-      {/* EXAM GRID SECTION */}
       <section
         style={{ background: "#fff", margin: "12px 0", padding: "16px" }}
       >
@@ -860,8 +818,63 @@ export function Home() {
           </div>
         </div>
       </section>
-
-      {/* FOOTER */}
+      <section
+        style={{ background: "#f0f4ff", margin: "12px 0", padding: "16px" }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                height: 2,
+                background: "linear-gradient(90deg,transparent,#7b1fa2)",
+              }}
+            />
+            <h2
+              style={{
+                color: "#7b1fa2",
+                fontStyle: "italic",
+                fontWeight: 800,
+                fontSize: 15,
+                margin: 0,
+                whiteSpace: "nowrap",
+                textAlign: "center",
+              }}
+            >
+              🎮 Gaming Typing Section
+            </h2>
+            <div
+              style={{
+                flex: 1,
+                height: 2,
+                background: "linear-gradient(90deg,#7b1fa2,transparent)",
+              }}
+            />
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 12,
+            }}
+          >
+            {[...GAMING_LEFT, ...GAMING_RIGHT].map((item) => (
+              <GamingCard
+                key={item.id}
+                item={item}
+                onClick={() => navigate({ to: `/exam/${item.id}/test` })}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
       <footer
         style={{
           background: "linear-gradient(135deg,#1a3a8c 0%,#0d2060 100%)",
