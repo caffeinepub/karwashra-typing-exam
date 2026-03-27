@@ -654,7 +654,7 @@ export function LiveTestPage() {
                       >
                         {s.v}
                       </div>
-                      <div style={{ fontSize: 10, color: "#666" }}>{s.l}</div>
+                      <div style={{ fontSize: 10, color: "#222" }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -865,10 +865,10 @@ export function LiveTestPage() {
                   >
                     {selectedExam.name}
                   </span>
-                  <span style={{ fontSize: 10, color: "#555" }}>
+                  <span style={{ fontSize: 10, color: "#1a1a1a" }}>
                     Req: {selectedExam.requiredWPM} WPM
                   </span>
-                  <span style={{ fontSize: 10, color: "#555" }}>
+                  <span style={{ fontSize: 10, color: "#1a1a1a" }}>
                     Time: {selectedTimeMin} min
                   </span>
                   {langOptions.length > 1 &&
@@ -910,7 +910,7 @@ export function LiveTestPage() {
                     <span
                       style={{
                         fontSize: 10,
-                        color: "#666",
+                        color: "#222",
                         fontWeight: 700,
                         marginRight: 2,
                       }}
@@ -946,7 +946,7 @@ export function LiveTestPage() {
                     <span
                       style={{
                         fontSize: 10,
-                        color: "#666",
+                        color: "#222",
                         marginLeft: 8,
                         marginRight: 4,
                       }}
@@ -970,7 +970,7 @@ export function LiveTestPage() {
                     <span
                       style={{
                         fontSize: 10,
-                        color: "#666",
+                        color: "#222",
                         width: 22,
                         textAlign: "center",
                       }}
@@ -1104,13 +1104,13 @@ export function LiveTestPage() {
                       >
                         {v}
                       </div>
-                      <div style={{ fontSize: 9, color: "#888" }}>{l}</div>
+                      <div style={{ fontSize: 9, color: "#333" }}>{l}</div>
                     </div>
                   ))}
                   <div
                     style={{ flex: 1, display: "flex", alignItems: "center" }}
                   >
-                    <div style={{ fontSize: 10, color: "#888" }}>
+                    <div style={{ fontSize: 10, color: "#333" }}>
                       {typed.length} / {passage.length} chars
                     </div>
                   </div>
@@ -1145,7 +1145,7 @@ export function LiveTestPage() {
                         {lastResult.passed ? "PASSED!" : "NOT QUALIFIED"}
                       </div>
                       <div
-                        style={{ fontSize: 11, color: "#666", marginTop: 2 }}
+                        style={{ fontSize: 11, color: "#222", marginTop: 2 }}
                       >
                         {selectedExam.name} — {selectedLanguage}
                       </div>
@@ -1196,11 +1196,11 @@ export function LiveTestPage() {
                           >
                             {s.v}
                           </div>
-                          <div style={{ fontSize: 10, color: "#888" }}>
+                          <div style={{ fontSize: 10, color: "#333" }}>
                             {s.l}
                           </div>
                           {s.req && (
-                            <div style={{ fontSize: 9, color: "#aaa" }}>
+                            <div style={{ fontSize: 9, color: "#444" }}>
                               Required: {s.req}
                             </div>
                           )}
@@ -1255,7 +1255,7 @@ export function LiveTestPage() {
                     style={{
                       textAlign: "center",
                       padding: 40,
-                      color: "#888",
+                      color: "#333",
                       fontSize: 13,
                     }}
                   >
@@ -1288,7 +1288,7 @@ export function LiveTestPage() {
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <div
-                      style={{ fontSize: 10, color: "#666", marginBottom: 4 }}
+                      style={{ fontSize: 10, color: "#222", marginBottom: 4 }}
                     >
                       Paragraph Length: {paragraphWords} words
                     </div>
@@ -1309,7 +1309,7 @@ export function LiveTestPage() {
                         display: "flex",
                         justifyContent: "space-between",
                         fontSize: 9,
-                        color: "#aaa",
+                        color: "#444",
                       }}
                     >
                       <span>250</span>
@@ -1318,7 +1318,7 @@ export function LiveTestPage() {
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <div
-                      style={{ fontSize: 10, color: "#666", marginBottom: 4 }}
+                      style={{ fontSize: 10, color: "#222", marginBottom: 4 }}
                     >
                       Backspace
                     </div>

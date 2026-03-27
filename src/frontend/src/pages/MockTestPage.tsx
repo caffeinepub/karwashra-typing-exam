@@ -90,7 +90,7 @@ export function MockTestPage() {
           >
             Mock Test – Select Exam
           </h1>
-          <p style={{ color: "#555", marginTop: 6, fontSize: 14 }}>
+          <p style={{ color: "#1a1a1a", marginTop: 6, fontSize: 14 }}>
             Choose any exam below to start a timed mock test with official rules
             and scoring.
           </p>
@@ -169,7 +169,7 @@ export function MockTestPage() {
                   >
                     {exam.name}
                   </div>
-                  <div style={{ fontSize: 10, color: "#666" }}>
+                  <div style={{ fontSize: 10, color: "#222" }}>
                     {exam.requiredWPM} WPM · {exam.timeMin} min
                   </div>
                   <div
@@ -199,7 +199,7 @@ export function MockTestPage() {
         style={{
           textAlign: "center",
           padding: "16px",
-          color: "#888",
+          color: "#333",
           fontSize: 12,
           borderTop: "1px solid #ddd",
           background: "#fff",

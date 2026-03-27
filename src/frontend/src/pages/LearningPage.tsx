@@ -606,7 +606,7 @@ export function LearningPage() {
                     alignItems: "center",
                   }}
                 >
-                  <span style={{ fontSize: 10, color: "#666" }}>Exercise:</span>
+                  <span style={{ fontSize: 10, color: "#222" }}>Exercise:</span>
                   {activeLesson.exercises
                     .map((_, _i) => ({ num: _i + 1 }))
                     .map(({ num }) => (
@@ -680,7 +680,7 @@ export function LearningPage() {
                     {
                       l: "Progress",
                       v: `${typed.length}/${currentText.length}`,
-                      color: "#555",
+                      color: "#1a1a1a",
                     },
                   ].map((s) => (
                     <div
@@ -702,7 +702,7 @@ export function LearningPage() {
                       >
                         {s.v}
                       </div>
-                      <div style={{ fontSize: 9, color: "#888" }}>{s.l}</div>
+                      <div style={{ fontSize: 9, color: "#333" }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -801,7 +801,7 @@ export function LearningPage() {
                           ? "Lesson Passed!"
                           : "Good Try!"}
                       </div>
-                      <div style={{ fontSize: 11, color: "#555" }}>
+                      <div style={{ fontSize: 11, color: "#1a1a1a" }}>
                         {resultData.wpm} WPM · {resultData.accuracy}% Accuracy
                       </div>
                     </div>

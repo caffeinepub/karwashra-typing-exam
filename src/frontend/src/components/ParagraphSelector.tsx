@@ -46,7 +46,7 @@ export function ParagraphSelector({
         }}
       >
         📄 SELECT PARAGRAPH{examName ? ` — ${examName}` : ""}
-        <span style={{ fontWeight: 400, color: "#555", fontSize: 9 }}>
+        <span style={{ fontWeight: 400, color: "#1a1a1a", fontSize: 9 }}>
           ({paragraphs.length} available)
         </span>
       </div>
@@ -132,7 +132,7 @@ export function ParagraphSelector({
                   <div
                     style={{
                       fontSize: 10,
-                      color: "#666",
+                      color: "#222",
                       lineHeight: 1.4,
                       overflow: "hidden",
                       whiteSpace: "nowrap",

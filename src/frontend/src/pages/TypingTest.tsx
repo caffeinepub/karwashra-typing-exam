@@ -536,7 +536,7 @@ export function TypingTest() {
         }}
       >
         <span style={{ fontWeight: "600" }}>{exam.name}</span>
-        <span style={{ color: "#aaa", fontSize: "11px" }}>Instructions</span>
+        <span style={{ color: "#444", fontSize: "11px" }}>Instructions</span>
       </div>
 
       {/* ═══ TABS + TIMER ROW ═══ */}
@@ -1021,7 +1021,7 @@ export function TypingTest() {
                   backgroundColor: "#fffbea",
                   borderBottom: "1px solid #ddd",
                   fontSize: "11px",
-                  color: "#666",
+                  color: "#222",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1166,7 +1166,7 @@ export function TypingTest() {
                 >
                   <div
                     style={{
-                      color: "#666",
+                      color: "#222",
                       fontSize: "10px",
                       marginBottom: "2px",
                     }}
@@ -1211,7 +1211,7 @@ export function TypingTest() {
                     style={{
                       display: "block",
                       fontSize: "11px",
-                      color: "#555",
+                      color: "#1a1a1a",
                       marginBottom: "2px",
                     }}
                   >
@@ -1240,7 +1240,7 @@ export function TypingTest() {
                     style={{
                       display: "block",
                       fontSize: "11px",
-                      color: "#555",
+                      color: "#1a1a1a",
                       marginBottom: "2px",
                     }}
                   >
@@ -1305,7 +1305,7 @@ export function TypingTest() {
                 borderTop: "1px solid #ccc",
                 paddingTop: "8px",
                 fontSize: "11px",
-                color: "#555",
+                color: "#1a1a1a",
               }}
             >
               <div
@@ -1363,7 +1363,7 @@ export function TypingTest() {
                     marginBottom: "4px",
                   }}
                 >
-                  <span style={{ color: "#555" }}>WPM:</span>
+                  <span style={{ color: "#1a1a1a" }}>WPM:</span>
                   <span
                     style={{
                       fontWeight: "bold",
@@ -1383,7 +1383,7 @@ export function TypingTest() {
                     marginBottom: "4px",
                   }}
                 >
-                  <span style={{ color: "#555" }}>Accuracy:</span>
+                  <span style={{ color: "#1a1a1a" }}>Accuracy:</span>
                   <span
                     style={{
                       fontWeight: "bold",
@@ -1402,7 +1402,7 @@ export function TypingTest() {
                     justifyContent: "space-between",
                   }}
                 >
-                  <span style={{ color: "#555" }}>Errors:</span>
+                  <span style={{ color: "#1a1a1a" }}>Errors:</span>
                   <span
                     style={{
                       fontWeight: "bold",
@@ -1438,7 +1438,7 @@ export function TypingTest() {
                   style={{
                     textAlign: "right",
                     fontSize: "10px",
-                    color: "#888",
+                    color: "#333",
                     marginTop: "2px",
                   }}
                 >
@@ -1478,7 +1478,11 @@ export function TypingTest() {
                 <ChevronLeft size={14} />
               </button>
               <span
-                style={{ fontSize: "11px", alignSelf: "center", color: "#555" }}
+                style={{
+                  fontSize: "11px",
+                  alignSelf: "center",
+                  color: "#1a1a1a",
+                }}
               >
                 {activeGroup}/3
               </span>

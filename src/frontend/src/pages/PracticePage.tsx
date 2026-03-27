@@ -528,16 +528,18 @@ export function PracticePage() {
                 style={{
                   textAlign: "center",
                   padding: 40,
-                  color: "#888",
+                  color: "#333",
                   flex: 1,
                 }}
                 data-ocid="practice.empty_state"
               >
                 <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#555" }}>
+                <div
+                  style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}
+                >
                   Select a Practice Set
                 </div>
-                <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>
+                <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>
                   Choose a paragraph from the left panel to begin practice
                 </div>
               </div>
@@ -623,7 +625,7 @@ export function PracticePage() {
                       flexShrink: 0,
                     }}
                   >
-                    <span style={{ fontSize: 11, color: "#555" }}>⏱</span>
+                    <span style={{ fontSize: 11, color: "#1a1a1a" }}>⏱</span>
                     <select
                       value={timeLimit}
                       onChange={(e) =>
@@ -830,7 +832,7 @@ export function PracticePage() {
                         ? liveWpm()
                         : (result?.wpm ?? "—")}
                     </div>
-                    <div style={{ fontSize: 8, color: "#888", lineHeight: 1 }}>
+                    <div style={{ fontSize: 8, color: "#333", lineHeight: 1 }}>
                       WPM
                     </div>
                   </div>
@@ -865,7 +867,7 @@ export function PracticePage() {
                           ? `${result.accuracy}%`
                           : "—"}
                     </div>
-                    <div style={{ fontSize: 8, color: "#888", lineHeight: 1 }}>
+                    <div style={{ fontSize: 8, color: "#333", lineHeight: 1 }}>
                       ACC
                     </div>
                   </div>
@@ -988,7 +990,7 @@ export function PracticePage() {
                       <span
                         style={{
                           fontSize: 10,
-                          color: "#888",
+                          color: "#333",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -1096,7 +1098,7 @@ export function PracticePage() {
                             <div
                               style={{
                                 fontSize: 9,
-                                color: "#777",
+                                color: "#333",
                                 marginTop: 2,
                                 fontWeight: 600,
                               }}
@@ -1161,7 +1163,7 @@ export function PracticePage() {
                                     "{w.typed}"
                                   </span>
                                   <span
-                                    style={{ color: "#888", margin: "0 4px" }}
+                                    style={{ color: "#333", margin: "0 4px" }}
                                   >
                                     →
                                   </span>
