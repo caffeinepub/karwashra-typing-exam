@@ -1,4 +1,8 @@
-import { EXAMS, generatePassageOfLength } from "@/data/exams";
+import {
+  EXAMS,
+  generatePassageOfLength,
+  getPassagesForExam,
+} from "@/data/exams";
 import { useActor } from "@/hooks/useActor";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
@@ -152,6 +156,7 @@ export function TypingTest() {
   const [selectedTimeMin, setSelectedTimeMin] = useState(exam?.timeMin ?? 10);
   const [fontSize, setFontSize] = useState(16);
   const [backspaceAllowed, setBackspaceAllowed] = useState(true);
+  const [showParaSelector, setShowParaSelector] = useState(false);
 
   // 3 group paragraphs
   const [groups, setGroups] = useState<string[]>([]);
@@ -626,7 +631,7 @@ export function TypingTest() {
             flexDirection: "column",
             padding: "6px",
             gap: "5px",
-            overflow: "hidden",
+            overflow: "auto",
           }}
         >
           {/* Passage box */}
@@ -636,8 +641,9 @@ export function TypingTest() {
               backgroundColor: "white",
               border: "1px solid #aaa",
               padding: "10px 12px",
-              flex: 1,
+              height: "260px",
               overflow: "hidden",
+              flexShrink: 0,
             }}
           >
             <PassageDisplay
@@ -682,6 +688,23 @@ export function TypingTest() {
                 </option>
               ))}
             </select>
+
+            <button
+              type="button"
+              onClick={() => setShowParaSelector(true)}
+              data-ocid="test.open_modal_button"
+              style={{
+                border: "1px solid #1565C0",
+                padding: "2px 8px",
+                background: "#e8f0fe",
+                cursor: "pointer",
+                fontSize: "11px",
+                fontWeight: "600",
+                color: "#1565C0",
+              }}
+            >
+              📄 Select Para
+            </button>
 
             <button
               type="button"
@@ -864,6 +887,123 @@ export function TypingTest() {
               A-
             </button>
           </div>
+
+          {/* Paragraph Selector Modal */}
+          {showParaSelector && (
+            <div
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setShowParaSelector(false);
+              }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0,0,0,0.5)",
+                zIndex: 1000,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onClick={() => setShowParaSelector(false)}
+            >
+              <dialog
+                open
+                onKeyDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                data-ocid="test.modal"
+                style={{
+                  backgroundColor: "white",
+                  border: "2px solid #1565C0",
+                  borderRadius: 4,
+                  width: "min(600px, 90vw)",
+                  maxHeight: "80vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#1565C0",
+                    color: "white",
+                    padding: "8px 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexShrink: 0,
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 13 }}>
+                    📄 Select Paragraph — {exam?.name ?? "All"}
+                  </span>
+                  <button
+                    type="button"
+                    data-ocid="test.close_button"
+                    onClick={() => setShowParaSelector(false)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "white",
+                      cursor: "pointer",
+                      fontSize: 16,
+                      fontWeight: "bold",
+                      lineHeight: 1,
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div style={{ overflowY: "auto", flex: 1, padding: 8 }}>
+                  {exam &&
+                    getPassagesForExam(exam, selectedLanguage).map(
+                      (para, idx) => (
+                        <button
+                          // biome-ignore lint/suspicious/noArrayIndexKey: paragraphs have no stable id
+                          key={`para-${idx}`}
+                          type="button"
+                          data-ocid={`test.item.${idx + 1}`}
+                          onClick={() => {
+                            const newGroups = [...groups];
+                            newGroups[activeGroup - 1] = para;
+                            setGroups(newGroups);
+                            setTyped("");
+                            setShowParaSelector(false);
+                          }}
+                          style={{
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "8px 10px",
+                            marginBottom: 5,
+                            border: "1px solid #ddd",
+                            borderRadius: 3,
+                            background: "#fafafa",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            color: "#222",
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: "#1565C0",
+                              marginRight: 6,
+                            }}
+                          >
+                            #{idx + 1}
+                          </span>
+                          {para.slice(0, 100)}
+                          {para.length > 100 ? "..." : ""}
+                        </button>
+                      ),
+                    )}
+                </div>
+              </dialog>
+            </div>
+          )}
 
           {/* Typing area */}
           <div
