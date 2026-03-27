@@ -588,25 +588,25 @@ export function Home() {
                 {[
                   {
                     label: "⏱ Live Test",
-                    to: "/live-test",
+                    to: "/exam-interface?tab=live-test",
                     bg: "linear-gradient(135deg,#d32f2f,#b71c1c)",
                     shadow: "rgba(211,47,47,0.4)",
                   },
                   {
                     label: "⌨️ Typing Practice",
-                    to: "/practice",
+                    to: "/exam-interface?tab=practice",
                     bg: "linear-gradient(135deg,#1565c0,#0d47a1)",
                     shadow: "rgba(21,101,192,0.4)",
                   },
                   {
                     label: "📋 Mock Test",
-                    to: "/mock-test",
+                    to: "/exam-interface?tab=mock-test",
                     bg: "linear-gradient(135deg,#e65100,#bf360c)",
                     shadow: "rgba(230,81,0,0.4)",
                   },
                   {
                     label: "🎓 Learning Typing",
-                    to: "/learning",
+                    to: "/exam-interface?tab=typing-exam",
                     bg: "linear-gradient(135deg,#00695c,#004d40)",
                     shadow: "rgba(0,105,92,0.4)",
                   },

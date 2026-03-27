@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { About } from "@/pages/About";
 import { Dashboard } from "@/pages/Dashboard";
 import { ExamCategories } from "@/pages/ExamCategories";
+import { ExamInterface } from "@/pages/ExamInterface";
 import { ExamRules } from "@/pages/ExamRules";
 import { ForgotPassword } from "@/pages/ForgotPassword";
 import { Home } from "@/pages/Home";
@@ -39,7 +40,8 @@ function RootLayout() {
     pathname === "/practice" ||
     pathname === "/learning" ||
     pathname === "/mock-test" ||
-    pathname === "/mcq";
+    pathname === "/mcq" ||
+    pathname === "/exam-interface";
 
   if (isHome) {
     return (
@@ -167,6 +169,14 @@ const mcqRoute = createRoute({
     exam: search.exam as string | undefined,
   }),
 });
+const examInterfaceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/exam-interface",
+  component: ExamInterface,
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: search.tab as string | undefined,
+  }),
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
@@ -187,6 +197,7 @@ const routeTree = rootRoute.addChildren([
   learningRoute,
   mockTestRoute,
   mcqRoute,
+  examInterfaceRoute,
 ]);
 
 const router = createRouter({ routeTree });
