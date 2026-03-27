@@ -18,6 +18,8 @@ export interface ExamMCQData {
   examId: string;
   examName: string;
   parts: ExamPart[];
+  negativeMarking: number; // 0 = no negative marking
+  negativeMarkingNote?: string; // optional note like "Tier-1: 0.50, Tier-2: 0.25"
 }
 
 // ===== REASONING QUESTIONS (Bilingual) =====
@@ -2191,62 +2193,159 @@ const deoParts: ExamPart[] = [
 ];
 
 export const EXAM_MCQ_DATA: Record<string, ExamMCQData> = {
-  all: { examId: "all", examName: "All Exam (सभी परीक्षा)", parts: sscParts },
-  dph: { examId: "dph", examName: "Delhi Police HCM", parts: delhiPoliceParts },
-  dssb: { examId: "dssb", examName: "DSSSB", parts: delhiPoliceParts },
-  dsssb: { examId: "dsssb", examName: "DSSSB", parts: delhiPoliceParts },
-  cgl: { examId: "cgl", examName: "SSC CGL", parts: sscParts },
-  chsl: { examId: "chsl", examName: "SSC CHSL", parts: sscParts },
-  mts: { examId: "mts", examName: "SSC MTS", parts: sscParts },
-  "ssc-cgl": { examId: "ssc-cgl", examName: "SSC CGL", parts: sscParts },
-  "ssc-chsl": { examId: "ssc-chsl", examName: "SSC CHSL", parts: sscParts },
-  "ssc-mts": { examId: "ssc-mts", examName: "SSC MTS", parts: sscParts },
-  ntpc: { examId: "ntpc", examName: "Railway NTPC", parts: railwayParts },
+  all: {
+    examId: "all",
+    examName: "All Exam (सभी परीक्षा)",
+    parts: sscParts,
+    negativeMarking: 0.25,
+  },
+  dph: {
+    examId: "dph",
+    examName: "Delhi Police HCM",
+    parts: delhiPoliceParts,
+    negativeMarking: 0.25,
+  },
+  dssb: {
+    examId: "dssb",
+    examName: "DSSSB",
+    parts: delhiPoliceParts,
+    negativeMarking: 0.25,
+  },
+  dsssb: {
+    examId: "dsssb",
+    examName: "DSSSB",
+    parts: delhiPoliceParts,
+    negativeMarking: 0.25,
+  },
+  cgl: {
+    examId: "cgl",
+    examName: "SSC CGL",
+    parts: sscParts,
+    negativeMarking: 0.5,
+    negativeMarkingNote: "Tier-1: 0.50 | Tier-2 (कुछ papers): 0.25",
+  },
+  chsl: {
+    examId: "chsl",
+    examName: "SSC CHSL",
+    parts: sscParts,
+    negativeMarking: 0.5,
+  },
+  mts: {
+    examId: "mts",
+    examName: "SSC MTS",
+    parts: sscParts,
+    negativeMarking: 0.25,
+  },
+  "ssc-cgl": {
+    examId: "ssc-cgl",
+    examName: "SSC CGL",
+    parts: sscParts,
+    negativeMarking: 0.5,
+    negativeMarkingNote: "Tier-1: 0.50 | Tier-2 (कुछ papers): 0.25",
+  },
+  "ssc-chsl": {
+    examId: "ssc-chsl",
+    examName: "SSC CHSL",
+    parts: sscParts,
+    negativeMarking: 0.5,
+  },
+  "ssc-mts": {
+    examId: "ssc-mts",
+    examName: "SSC MTS",
+    parts: sscParts,
+    negativeMarking: 0.25,
+  },
+  ntpc: {
+    examId: "ntpc",
+    examName: "Railway NTPC",
+    parts: railwayParts,
+    negativeMarking: 0.33,
+  },
   "rrb-ntpc": {
     examId: "rrb-ntpc",
     examName: "Railway NTPC",
     parts: railwayParts,
+    negativeMarking: 0.33,
   },
-  bank: { examId: "bank", examName: "Banking (IBPS/SBI)", parts: bankingParts },
+  bank: {
+    examId: "bank",
+    examName: "Banking (IBPS/SBI)",
+    parts: bankingParts,
+    negativeMarking: 0.25,
+  },
   "bank-po": {
     examId: "bank-po",
     examName: "Banking (IBPS/SBI)",
     parts: bankingParts,
+    negativeMarking: 0.25,
   },
-  state: { examId: "state", examName: "State Level Exam", parts: stateParts },
+  state: {
+    examId: "state",
+    examName: "State Level Exam",
+    parts: stateParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "Usually No / Sometimes 0.25",
+  },
   "state-level": {
     examId: "state-level",
     examName: "State Level Exam",
     parts: stateParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "Usually No / Sometimes 0.25",
   },
-  hrt: { examId: "hrt", examName: "Haryana HARTRON", parts: deoParts },
+  hrt: {
+    examId: "hrt",
+    examName: "Haryana HARTRON",
+    parts: deoParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "Usually No Negative Marking",
+  },
   "haryana-harton": {
     examId: "haryana-harton",
     examName: "Haryana HARTRON (Harton)",
     parts: deoParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "Usually No Negative Marking",
   },
   deo: {
     examId: "deo",
     examName: "DEO (Data Entry Operator)",
     parts: deoParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "Usually No Negative Marking",
   },
-  pcs: { examId: "pcs", examName: "State PCS", parts: stateParts },
+  pcs: {
+    examId: "pcs",
+    examName: "State PCS",
+    parts: stateParts,
+    negativeMarking: 0.33,
+  },
   "state-pcs": {
     examId: "state-pcs",
     examName: "State PCS",
     parts: stateParts,
+    negativeMarking: 0.33,
   },
   teach: {
     examId: "teach",
     examName: "Teaching (CTET/DSSSB)",
     parts: teachingParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "No Negative Marking",
   },
   teaching: {
     examId: "teaching",
     examName: "Teaching (CTET/DSSSB)",
     parts: teachingParts,
+    negativeMarking: 0,
+    negativeMarkingNote: "No Negative Marking",
   },
-  clerk: { examId: "clerk", examName: "Clerk Exam", parts: deoParts },
+  clerk: {
+    examId: "clerk",
+    examName: "Clerk Exam",
+    parts: deoParts,
+    negativeMarking: 0.25,
+  },
 };
 
 export function getExamMCQ(examId: string): ExamMCQData {

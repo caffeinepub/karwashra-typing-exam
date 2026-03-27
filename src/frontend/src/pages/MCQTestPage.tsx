@@ -255,6 +255,7 @@ export function MCQTestPage() {
     correct: number;
     wrong: number;
     unattempted: number;
+    netScore: number;
   } {
     const pk = `${pIdx}`;
     const pAnswers = answers[pk] || {};
@@ -267,7 +268,9 @@ export function MCQTestPage() {
       else if (pAnswers[i] === q.answer) correct++;
       else wrong++;
     });
-    return { correct, wrong, unattempted };
+    const nm = examData.negativeMarking || 0;
+    const netScore = Math.max(0, correct - wrong * nm);
+    return { correct, wrong, unattempted, netScore };
   }
 
   const allSubmitted = examData.parts.every((_, i) => submitted[`${i}`]);
@@ -479,6 +482,59 @@ export function MCQTestPage() {
               </div>
               <div
                 style={{
+                  background:
+                    examData.negativeMarking > 0 ? "#fff3e0" : "#f0fff4",
+                  border: `1px solid ${examData.negativeMarking > 0 ? "#ffb74d" : "#81c784"}`,
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: examData.negativeMarking > 0 ? "#e65100" : "#2e7d32",
+                  textAlign: "center",
+                  maxWidth: 400,
+                }}
+              >
+                {examData.negativeMarking > 0 ? (
+                  <span>
+                    ⚠️ Negative Marking: -{examData.negativeMarking} per wrong
+                    answer
+                    {examData.negativeMarkingNote ? (
+                      <>
+                        <br />
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 400,
+                            color: "#795548",
+                          }}
+                        >
+                          ({examData.negativeMarkingNote})
+                        </span>
+                      </>
+                    ) : null}
+                  </span>
+                ) : (
+                  <span>
+                    ✅ No Negative Marking
+                    {examData.negativeMarkingNote ? (
+                      <>
+                        <br />
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 400,
+                            color: "#388e3c",
+                          }}
+                        >
+                          ({examData.negativeMarkingNote})
+                        </span>
+                      </>
+                    ) : null}
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
                   background: "#f0f4ff",
                   border: "1px solid #c5d3f0",
                   borderRadius: 8,
@@ -497,6 +553,11 @@ export function MCQTestPage() {
                 <div>• Each question has 4 options (a, b, c, d)</div>
                 <div>• Select the correct answer and proceed</div>
                 <div>• Mark for review if unsure</div>
+                {examData.negativeMarking > 0 && (
+                  <div style={{ color: "#c62828", fontWeight: 700 }}>
+                    • Wrong answer = -{examData.negativeMarking} marks deducted
+                  </div>
+                )}
                 <div>• Submit before time runs out</div>
               </div>
               <button
@@ -567,6 +628,11 @@ export function MCQTestPage() {
                         <span style={{ color: "#1a3a8c", fontWeight: 800 }}>
                           Score: {s.correct}/{part.questions.length}
                         </span>
+                        {examData.negativeMarking > 0 && (
+                          <span style={{ color: "#e65100", fontWeight: 800 }}>
+                            Net: {s.netScore.toFixed(2)}
+                          </span>
+                        )}
                       </div>
                     );
                   })()}
@@ -952,7 +1018,10 @@ export function MCQTestPage() {
                         color: "#2e7d32",
                       }}
                     >
-                      {s!.correct}/{p.questions.length}
+                      {examData.negativeMarking > 0
+                        ? s!.netScore.toFixed(1)
+                        : s!.correct}
+                      /{p.questions.length}
                     </span>
                   ) : (
                     <span style={{ fontSize: 11, color: "#aaa" }}>Pending</span>
@@ -1022,13 +1091,14 @@ export function MCQTestPage() {
             </div>
 
             {(() => {
-              let totalCorrect = 0;
+              let totalNet = 0;
               let totalQ = 0;
               return (
                 <>
                   {examData.parts.map((p, i) => {
                     const s = getPartScore(i);
-                    totalCorrect += s.correct;
+                    totalNet +=
+                      examData.negativeMarking > 0 ? s.netScore : s.correct;
                     totalQ += p.questions.length;
                     const pct = Math.round(
                       (s.correct / p.questions.length) * 100,
@@ -1061,6 +1131,17 @@ export function MCQTestPage() {
                           <div style={{ fontSize: 12, color: "#555" }}>
                             Correct: {s.correct} | Wrong: {s.wrong} | Skipped:{" "}
                             {s.unattempted}
+                            {examData.negativeMarking > 0 && (
+                              <>
+                                {" "}
+                                |{" "}
+                                <span
+                                  style={{ color: "#e65100", fontWeight: 700 }}
+                                >
+                                  Net: {s.netScore.toFixed(2)}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div style={{ textAlign: "right" }}>
@@ -1101,10 +1182,16 @@ export function MCQTestPage() {
                     }}
                   >
                     <div style={{ fontSize: 13, marginBottom: 4 }}>
-                      Total Score
+                      Total Score{" "}
+                      {examData.negativeMarking > 0 && (
+                        <span style={{ fontSize: 11, color: "#ffb74d" }}>
+                          (After -{examData.negativeMarking} Negative Marking)
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 32, fontWeight: 900 }}>
-                      {totalCorrect} / {totalQ}
+                      {totalNet.toFixed(examData.negativeMarking > 0 ? 2 : 0)} /{" "}
+                      {totalQ}
                     </div>
                     <div
                       style={{
@@ -1113,7 +1200,7 @@ export function MCQTestPage() {
                         color: "#ffd740",
                       }}
                     >
-                      {Math.round((totalCorrect / totalQ) * 100)}%
+                      {Math.round((totalNet / totalQ) * 100)}%
                     </div>
                   </div>
                 </>
