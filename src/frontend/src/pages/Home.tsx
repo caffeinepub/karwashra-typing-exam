@@ -873,6 +873,181 @@ export function Home() {
               />
             ))}
           </div>
+          {/* Popular Typing Games */}
+          <div style={{ marginTop: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: 2,
+                  background: "linear-gradient(90deg,transparent,#e91e63)",
+                }}
+              />
+              <h3
+                style={{
+                  color: "#e91e63",
+                  fontStyle: "italic",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  margin: 0,
+                  whiteSpace: "nowrap",
+                  textAlign: "center",
+                }}
+              >
+                🕹️ Popular Typing Games
+              </h3>
+              <div
+                style={{
+                  flex: 1,
+                  height: 2,
+                  background: "linear-gradient(90deg,#e91e63,transparent)",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 10,
+              }}
+            >
+              {[
+                {
+                  name: "TypingClub",
+                  url: "https://www.typingclub.com",
+                  icon: "🎯",
+                  color: "#1565c0",
+                  desc: "Free Typing Lessons",
+                },
+                {
+                  name: "Nitro Type",
+                  url: "https://www.nitrotype.com",
+                  icon: "🏎️",
+                  color: "#e53935",
+                  desc: "Racing Typing Game",
+                },
+                {
+                  name: "Keybr",
+                  url: "https://www.keybr.com",
+                  icon: "⌨️",
+                  color: "#2e7d32",
+                  desc: "Speed Trainer",
+                },
+                {
+                  name: "ZType",
+                  url: "https://zty.pe",
+                  icon: "🚀",
+                  color: "#6a1b9a",
+                  desc: "Space Shooter",
+                },
+                {
+                  name: "Typing.com",
+                  url: "https://www.typing.com",
+                  icon: "💻",
+                  color: "#00838f",
+                  desc: "Learn & Practice",
+                },
+                {
+                  name: "10FastFingers",
+                  url: "https://10fastfingers.com",
+                  icon: "⚡",
+                  color: "#ef6c00",
+                  desc: "Speed Test",
+                },
+                {
+                  name: "TypeRacer",
+                  url: "https://typeracer.com",
+                  icon: "🏁",
+                  color: "#558b2f",
+                  desc: "Race Others Live",
+                },
+                {
+                  name: "Typing Attack",
+                  url: "https://www.typingattack.com",
+                  icon: "🎮",
+                  color: "#c62828",
+                  desc: "Typing Shooter",
+                },
+              ].map((game) => (
+                <a
+                  key={game.name}
+                  href={game.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: game.color,
+                    borderRadius: 10,
+                    padding: "12px 8px",
+                    textDecoration: "none",
+                    color: "#fff",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    cursor: "pointer",
+                    transition: "transform 0.15s, box-shadow 0.15s",
+                    minHeight: 80,
+                  }}
+                  onMouseOver={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform =
+                      "scale(1.05)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 4px 16px rgba(0,0,0,0.35)";
+                  }}
+                  onFocus={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform =
+                      "scale(1.05)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 4px 16px rgba(0,0,0,0.35)";
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform =
+                      "scale(1)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 2px 8px rgba(0,0,0,0.2)";
+                  }}
+                  onBlur={(e) => {
+                    (e.currentTarget as HTMLElement).style.transform =
+                      "scale(1)";
+                    (e.currentTarget as HTMLElement).style.boxShadow =
+                      "0 2px 8px rgba(0,0,0,0.2)";
+                  }}
+                >
+                  <span style={{ fontSize: 24, marginBottom: 4 }}>
+                    {game.icon}
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 11,
+                      textAlign: "center",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {game.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 9,
+                      opacity: 0.85,
+                      marginTop: 2,
+                      textAlign: "center",
+                    }}
+                  >
+                    {game.desc}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
       <footer
