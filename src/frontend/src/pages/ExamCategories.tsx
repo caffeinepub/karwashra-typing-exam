@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EXAMS } from "@/data/exams";
+import { ALLOWED_EXAMS as EXAMS } from "@/data/exams";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, Search } from "lucide-react";
 import { motion } from "motion/react";

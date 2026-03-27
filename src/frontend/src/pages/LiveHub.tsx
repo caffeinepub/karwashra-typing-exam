@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EXAMS } from "@/data/exams";
+import { ALLOWED_EXAMS as EXAMS } from "@/data/exams";
 import { useActor } from "@/hooks/useActor";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";

@@ -2,7 +2,11 @@ import {
   type ParagraphItem,
   ParagraphSelector,
 } from "@/components/ParagraphSelector";
-import { EXAMS, type ExamData, generatePassageOfLength } from "@/data/exams";
+import {
+  ALLOWED_EXAMS as EXAMS,
+  type ExamData,
+  generatePassageOfLength,
+} from "@/data/exams";
 import { useActor } from "@/hooks/useActor";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "@tanstack/react-router";

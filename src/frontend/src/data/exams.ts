@@ -1037,6 +1037,27 @@ export const EXAMS: ExamData[] = [
   },
 ];
 
+export const ALLOWED_EXAM_IDS = [
+  "delhi-police-hcm",
+  "dsssb",
+  "ssc-cgl",
+  "ssc-chsl",
+  "ssc-mts",
+  "rrb-ntpc",
+  "bank-po",
+  "bank-clerk",
+  "state-level",
+  "haryana-harton",
+  "deo",
+  "state-pcs",
+  "teaching",
+  "clerk",
+];
+
+export const ALLOWED_EXAMS = EXAMS.filter((e) =>
+  ALLOWED_EXAM_IDS.includes(e.id),
+);
+
 export const PASSAGES: Record<string, string[]> = {
   english: [
     "The Government of India has always given priority to the welfare of its citizens through various developmental schemes and programmes. The state of Haryana, with its capital at Chandigarh, has been at the forefront of agricultural and industrial development. Cities like Rohtak, Hisar, Karnal, Gurugram, and Faridabad have witnessed tremendous growth over the past few decades. The ancient city of Kurukshetra holds immense historical and religious significance as the place where the Mahabharata war was fought. The Ministry of Finance allocates substantial resources every year to ensure that essential services reach every corner of the country from the mountainous regions of the north to the coastal areas of the south. It is the responsibility of every government employee to work diligently and with full honesty so that the common people benefit from these programmes. The integrity and efficiency of the public service system is crucial for the overall development of the nation. India's Parliament, located in New Delhi, is the supreme legislative body of the country. The Rashtrapati Bhavan is the official residence of the President of India. Our Constitution, adopted on the twenty-sixth of November nineteen forty-nine, guarantees fundamental rights to every citizen. The National flag, with its three colours of saffron, white, and green, represents the values of courage, peace, and prosperity. The Republic of India, with its diverse culture and traditions, stands as one of the largest democracies in the world. Every year on the twenty-sixth of January, the nation celebrates Republic Day with great enthusiasm and patriotic fervour. The Indian Armed Forces, comprising the Army, Navy, and Air Force, protect the sovereignty and territorial integrity of the country. Education and healthcare are two of the most important pillars of national development and the government has been investing heavily in both these sectors. Under various flagship schemes, thousands of schools and hospitals have been built across the country to serve the needs of the population. The National Health Mission aims to provide affordable and quality healthcare to all citizens, especially those living in rural and remote areas. Digital India is another important initiative that seeks to transform the country into a digitally empowered society and knowledge economy. The Prime Minister's Office coordinates policy decisions across all ministries and departments to ensure smooth functioning of the executive machinery. Good governance requires transparency, accountability, and responsiveness to citizen needs at all levels of administration. Local self-governance through Panchayati Raj institutions has empowered millions of citizens at the grassroots level across the country.",

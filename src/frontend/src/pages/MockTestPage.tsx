@@ -1,4 +1,4 @@
-import { EXAMS } from "@/data/exams";
+import { ALLOWED_EXAMS as EXAMS } from "@/data/exams";
 import { useNavigate } from "@tanstack/react-router";
 import { ClipboardList } from "lucide-react";
 
