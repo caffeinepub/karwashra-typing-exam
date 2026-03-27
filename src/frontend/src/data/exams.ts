@@ -19,6 +19,26 @@ export interface ExamData {
 
 export const EXAMS: ExamData[] = [
   {
+    id: "all-exam",
+    name: "All Exam",
+    authority: "Multiple Authorities",
+    requiredWPM: 30,
+    timeMin: 10,
+    language: "Hindi/English",
+    accuracy: 85,
+    officialSite: "https://ssc.nic.in",
+    logoUrl:
+      "https://upload.wikimedia.org/wikipedia/en/thumb/8/88/Logo_of_Staff_Selection_Commission.svg/1200px-Logo_of_Staff_Selection_Commission.svg.png",
+    description:
+      "Practice for all government typing exams — SSC, Railway, Banking, State Level and more.",
+    category: "All",
+    rules: ["Standard typing rules apply", "Backspace as per exam rules"],
+    negativeMarking: "Varies by exam",
+    importantNotes: ["Select any exam type to practice"],
+    eligibility: "All candidates",
+    markingScheme: "Varies by exam",
+  },
+  {
     id: "ssc-chsl",
     name: "SSC CHSL",
     authority: "Staff Selection Commission",
@@ -1038,6 +1058,7 @@ export const EXAMS: ExamData[] = [
 ];
 
 export const ALLOWED_EXAM_IDS = [
+  "all-exam",
   "delhi-police-hcm",
   "dsssb",
   "ssc-cgl",
