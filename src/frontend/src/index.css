@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -64,7 +64,11 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Poppins", "PlusJakartaSans", sans-serif;
+    font-family: "Inter", "Poppins", "PlusJakartaSans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
   }
 
   h1,
@@ -73,9 +77,25 @@
   h4,
   h5,
   h6 {
-    font-family: "Poppins", "PlusJakartaSans", sans-serif;
+    font-family: "Inter", "Poppins", "PlusJakartaSans", sans-serif;
     font-weight: 700;
   }
+}
+
+/* Typing area specific styles */
+.typing-box {
+  font-size: 18px;
+  color: #f8f9fa;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+/* Passage/paragraph text in typing tests */
+.passage-text,
+.typing-passage {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 17px;
+  line-height: 1.8;
+  letter-spacing: 0.02em;
 }
 
 @layer utilities {
